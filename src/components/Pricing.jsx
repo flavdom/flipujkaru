@@ -84,6 +84,11 @@ function PlanCard({ plan }) {
       <p className="mt-1 text-xs text-zinc-500">
         {billing.months > 1 ? `${czk(perMonth(billing))} / měsíc · ${billing.note}` : billing.note}
       </p>
+      {billing.trialDays > 0 && (
+        <p className="mt-2 inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
+          První měsíc zdarma — platíš až od 2. měsíce
+        </p>
+      )}
 
       <ul className="mt-6 space-y-3">
         {plan.features.map((f, i) => (

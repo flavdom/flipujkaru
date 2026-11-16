@@ -17,17 +17,19 @@ export const OBCHODNI_PODMINKY = {
     {
       title: '1. Úvodní ustanovení',
       blocks: [
-        { p: '1.1. Tyto obchodní podmínky (dále jen „Podmínky") upravují vzájemná práva a povinnosti mezi společností Nutriverse s.r.o., IČO: 139 65 433, se sídlem v Praze (dále jen „Poskytovatel"), a fyzickou nebo právnickou osobou, která si prostřednictvím webové stránky www.flipujkaru.cz zakoupí členství v placené komunitě Flipuj Káru (dále jen „Člen").' },
+        { p: '1.1. Tyto obchodní podmínky (dále jen „Podmínky") upravují vzájemná práva a povinnosti mezi společností Nutriverse s.r.o., IČO: 139 65 433, se sídlem Světova 523/1, Praha 8, 180 00 (dále jen „Poskytovatel"), a fyzickou nebo právnickou osobou, která si prostřednictvím webové stránky www.flipujkaru.cz objedná členství v placené komunitě Flipuj Káru (dále jen „Člen").' },
         { p: '1.2. Předmětem členství je přístup k obsahu, nástrojům, konzultacím a komunitě zaměřené na oblast nákupu, přípravy a prodeje (tzv. „flipování") osobních vozidel za účelem zisku (dále jen „Služba").' },
-        { p: '1.3. Uzavřením smlouvy (dokončením objednávky a úhradou členského poplatku) Člen potvrzuje, že se s těmito Podmínkami seznámil, souhlasí s nimi a zavazuje se je dodržovat.' },
+        { p: '1.3. Uzavřením smlouvy (dokončením objednávky, zadáním údajů platební karty a potvrzením těchto Podmínek) Člen potvrzuje, že se s těmito Podmínkami seznámil, souhlasí s nimi a zavazuje se je dodržovat. Zejména výslovně souhlasí se zahájením poskytování Služby před uplynutím 14denní lhůty pro odstoupení od smlouvy a s automatickým obnovováním členství a strháváním členského poplatku podle čl. 5.' },
       ],
     },
     {
-      title: '2. Členství a jeho aktivace',
+      title: '2. Členství, zkušební období a aktivace',
       blocks: [
-        { p: '2.1. Členství vzniká úhradou příslušného členského poplatku dle aktuálně platného ceníku uvedeného na webu www.flipujkaru.cz.' },
-        { p: '2.2. Dnem aktivace členství se rozumí den, kdy je platba členského poplatku připsána na účet Poskytovatele, případně den zpřístupnění členské sekce, podle toho, který nastane dříve (dále jen „Aktivace").' },
-        { p: '2.3. Členství je vázáno na konkrétní osobu (Člena) a není bez předchozího písemného souhlasu Poskytovatele převoditelné na třetí osobu.' },
+        { p: '2.1. Členství je poskytováno formou předplatného. U měsíčního balíčku je první kalendářní měsíc (30 dní) od aktivace poskytován zdarma (zkušební období). Zkušební období lze využít pouze jednou.' },
+        { p: '2.2. Aktivací se rozumí okamžik, kdy Člen úspěšně zadá údaje své platební karty v objednávkovém procesu a potvrdí objednávku (dále jen „Aktivace"). Od tohoto okamžiku má Člen přístup ke Službě.' },
+        { p: '2.3. Po uplynutí zkušebního období se členství automaticky mění na placené. Členství pokračuje na dobu neurčitou a členský poplatek se strhává automaticky v intervalu zvoleného balíčku (měsíčně, jednou za 4 měsíce nebo jednou za 12 měsíců), dokud není vypovězeno v souladu s čl. 6. U balíčků na 4 a 12 měsíců se zkušební období neuplatňuje a první členský poplatek se strhává při Aktivaci.' },
+        { p: '2.4. Výše členského poplatku se řídí aktuálním ceníkem a zvoleným balíčkem členství zveřejněným na www.flipujkaru.cz ke dni objednávky. Poskytovatel si vyhrazuje právo ceník měnit; změna se na již aktivní členství uplatní nejdříve od následujícího fakturačního období a Člen o ní bude předem informován.' },
+        { p: '2.5. Členství je vázáno na konkrétní osobu (Člena) a není bez předchozího písemného souhlasu Poskytovatele převoditelné na třetí osobu.' },
       ],
     },
     {
@@ -46,11 +48,11 @@ export const OBCHODNI_PODMINKY = {
     {
       title: '4. Garance vrácení peněz',
       blocks: [
-        { p: '4.1. Poskytovatel garantuje Členovi vrácení uhrazeného členského poplatku, pokud Člen do 60 kalendářních dnů od Aktivace neuskuteční svůj první nákup a následný prodej vozidla (tzv. „flip"), a to za předpokladu, že Člen v tomto období kumulativně splnil všechny následující podmínky:' },
+        { p: '4.1. Poskytovatel garantuje Členovi vrácení uhrazeného členského poplatku za první placené období, pokud Člen do 60 kalendářních dnů od Aktivace neuskuteční svůj první nákup a následný prodej vozidla (tzv. „flip"), a to za předpokladu, že Člen v tomto období kumulativně splnil všechny následující podmínky:' },
         { ol: [
-          'Absolvoval onboarding — dokončil úvodní onboardingový proces/školení poskytovaný v rámci členství, což je potvrzeno systémem Poskytovatele (např. dokončení onboardingového checklistu nebo videokurzu).',
-          'Aktivně inzeroval vozidlo — měl alespoň jedno vozidlo aktivně a nepřetržitě inzerováno k prodeji po dobu minimálně 30 kalendářních dnů na nejméně 3 (třech) různých inzertních portálech současně (např. Bazoš.cz, Sbazar.cz, Autobazar.eu, TipCars.cz apod.).',
-          'Doložil aktivitu — na vyžádání Poskytovatele předložil důkaz o splnění bodu 2, např. screenshoty aktivních inzerátů s viditelným datem vystavení, přímé odkazy na inzeráty, nebo export z nástroje pro správu inzerce.',
+          'Absolvoval onboarding — dokončil úvodní onboardingový proces/školení poskytovaný v rámci členství, což je potvrzeno systémem Poskytovatele.',
+          'Aktivně inzeroval vozidlo — měl alespoň jedno vozidlo aktivně a nepřetržitě inzerováno k prodeji po dobu minimálně 30 kalendářních dnů na nejméně 3 různých inzertních portálech současně.',
+          'Doložil aktivitu — na vyžádání Poskytovatele předložil důkaz o splnění bodu 2.',
         ] },
         { p: '4.2. Postup uplatnění: Žádost o vrácení peněz musí Člen zaslat písemně e-mailem na kontaktní adresu Poskytovatele nejpozději do 7 kalendářních dnů po uplynutí lhůty dle odst. 4.1, spolu s doklady dle bodu 3 výše.' },
         { p: '4.3. Poskytovatel žádost posoudí do 14 kalendářních dnů od jejího doručení. V případě, že Člen prokazatelně splnil všechny podmínky dle odst. 4.1, vrátí Poskytovatel členský poplatek na bankovní účet, ze kterého byla platba provedena, a to do 14 kalendářních dnů od schválení žádosti.' },
@@ -61,53 +63,64 @@ export const OBCHODNI_PODMINKY = {
           'inzeroval vozidlo na méně než 3 inzertních portálech současně,',
           'porušil tyto Podmínky nebo etický kodex komunity Flipuj Káru.',
         ] },
-        { p: '4.5. Garance dle tohoto článku je jednorázová a vztahuje se pouze na první členský poplatek uhrazený Členem; nevztahuje se na případná prodloužení či opakované platby členství.' },
+        { p: '4.5. Garance dle tohoto článku je jednorázová a vztahuje se pouze na první členský poplatek skutečně uhrazený (zaplacený) Členem; zkušební měsíc zdarma se do garance nepočítá jako uhrazený poplatek. Garance se nevztahuje na případná prodloužení či opakované platby členství.' },
       ],
     },
     {
       title: '5. Cena a platební podmínky',
       blocks: [
-        { p: '5.1. Výše členského poplatku je uvedena na webových stránkách www.flipujkaru.cz platných ke dni objednávky, a to včetně DPH, je-li Poskytovatel plátcem.' },
-        { p: '5.2. Platbu lze provést způsoby uvedenými na webových stránkách (zejména platební kartou nebo bankovním převodem prostřednictvím platební brány).' },
-        { p: '5.3. Poskytovatel vystaví Členovi po přijetí platby daňový doklad, který zašle na e-mailovou adresu uvedenou v objednávce.' },
+        { p: '5.1. U měsíčního balíčku je zkušební období (první měsíc) poskytováno zdarma. Od začátku druhého měsíce a dále se každý měsíc automaticky strhává členský poplatek ve výši dle aktuálního ceníku. U balíčků na 4 a 12 měsíců se členský poplatek strhává při Aktivaci a poté automaticky na začátku každého dalšího fakturačního období.' },
+        { p: '5.2. Stržení platby za následující období probíhá automaticky z platební karty, kterou Člen zadal při objednávce, a to zpravidla 1–3 dny před začátkem dalšího fakturačního období.' },
+        { p: '5.3. Člen výslovně souhlasí s uložením údajů platební karty u platebního poskytovatele a s automatickým strháváním opakujících se plateb.' },
+        { p: '5.4. Poskytovatel vystaví Členovi daňový doklad za každé uhrazené období a zašle jej na e-mailovou adresu uvedenou v objednávce.' },
+        { p: '5.5. V případě neúspěšného stržení platby Poskytovatel Člena informuje a poskytne přiměřenou lhůtu k nápravě. Po marném uplynutí této lhůty může být členství pozastaveno nebo ukončeno.' },
       ],
     },
     {
-      title: '6. Odstoupení od smlouvy',
+      title: '6. Výpověď a ukončení členství',
       blocks: [
-        { p: '6.1. Je-li Člen spotřebitelem ve smyslu § 419 zákona č. 89/2012 Sb., občanský zákoník, má právo v souladu s § 1829 odst. 1 tohoto zákona odstoupit od smlouvy bez udání důvodu ve lhůtě 14 dnů ode dne uzavření smlouvy.' },
-        { p: '6.2. Pokud Člen požádal o zahájení poskytování Služby (zpřístupnění členské sekce) již před uplynutím lhůty pro odstoupení, a Služba mu byla plně poskytnuta, ztrácí Člen v souladu s § 1837 písm. a) občanského zákoníku právo na odstoupení od smlouvy ohledně již poskytnutého digitálního obsahu/služby. Poskytovatel na tuto skutečnost Člena při objednávce výslovně upozorní a vyžádá si jeho výslovný souhlas.' },
-        { p: '6.3. Odstoupení od smlouvy dle tohoto článku je nezávislé na garanci vrácení peněz dle čl. 4 a řídí se samostatně příslušnými ustanoveními občanského zákoníku.' },
+        { p: '6.1. Členství lze vypovědět kdykoli. Výpovědní lhůta činí jeden měsíc a počíná běžet dnem doručení výpovědi Poskytovateli.' },
+        { p: '6.2. Výpověď je nutno zaslat písemně (e-mailem na kontaktní adresu uvedenou na webu) nebo prostřednictvím členského účtu, je-li tato možnost k dispozici. Výpověď musí být doručena nejpozději 3 pracovní dny před plánovaným datem stržení další platby, má-li se vztahovat již na následující období.' },
+        { p: '6.3. Po uplynutí výpovědní lhůty přístup ke Službě zaniká a další platby již nebudou strhávány. Již uhrazené poplatky se nevracejí (s výjimkou případů podle čl. 4 nebo zákonného práva na odstoupení).' },
+        { p: '6.4. Poskytovatel může členství ukončit s okamžitou účinností v případě závažného porušení těchto Podmínek nebo etického kodexu komunity.' },
       ],
     },
     {
-      title: '7. Práva a povinnosti Člena',
+      title: '7. Odstoupení od smlouvy',
       blocks: [
-        { p: '7.1. Člen se zavazuje užívat Službu v souladu s těmito Podmínkami a platnými právními předpisy.' },
-        { p: '7.2. Člen bere na vědomí, že veškeré informace, kalkulace, doporučení a materiály poskytované v rámci Služby mají informativní a vzdělávací charakter a nepředstavují investiční, právní ani daňové poradenství. Konečné rozhodnutí o nákupu, přípravě a prodeji vozidla je vždy na Členovi.' },
-        { p: '7.3. Poskytovatel negarantuje Členovi dosažení konkrétního zisku ani úspěšnost jednotlivých obchodů; garance dle čl. 4 se týká výhradně vrácení členského poplatku za podmínek tam uvedených, nikoli náhrady případné ztráty z obchodu s vozidlem.' },
+        { p: '7.1. Je-li Člen spotřebitelem ve smyslu § 419 zákona č. 89/2012 Sb., občanský zákoník, má právo odstoupit od smlouvy bez udání důvodu ve lhůtě 14 dnů ode dne uzavření smlouvy.' },
+        { p: '7.2. Pokud Člen požádal o zahájení poskytování Služby již před uplynutím lhůty pro odstoupení (což se děje zadáním platební karty a potvrzením objednávky) a Služba mu byla plně poskytnuta, ztrácí v souladu s § 1837 písm. a) občanského zákoníku právo na odstoupení od smlouvy ohledně již poskytnutého digitálního obsahu. Na tuto skutečnost je Člen při objednávce výslovně upozorněn a dává k tomu výslovný souhlas.' },
+        { p: '7.3. Odstoupení dle tohoto článku je nezávislé na garanci podle čl. 4.' },
       ],
     },
     {
-      title: '8. Reklamace',
+      title: '8. Práva a povinnosti Člena',
       blocks: [
-        { p: '8.1. Případné reklamace týkající se Služby uplatňuje Člen písemně na kontaktní e-mailové adrese Poskytovatele uvedené na webu.' },
-        { p: '8.2. Poskytovatel reklamaci vyřídí bez zbytečného odkladu, nejpozději do 30 dnů ode dne jejího uplatnění, nedohodnou-li se strany jinak.' },
+        { p: '8.1. Člen se zavazuje užívat Službu v souladu s těmito Podmínkami a platnými právními předpisy.' },
+        { p: '8.2. Člen bere na vědomí, že veškeré informace, kalkulace, doporučení a materiály poskytované v rámci Služby mají informativní a vzdělávací charakter a nepředstavují investiční, právní ani daňové poradenství. Konečné rozhodnutí o nákupu, přípravě a prodeji vozidla je vždy na Členovi.' },
+        { p: '8.3. Poskytovatel negarantuje Členovi dosažení konkrétního zisku ani úspěšnost jednotlivých obchodů; garance dle čl. 4 se týká výhradně vrácení členského poplatku za podmínek tam uvedených, nikoli náhrady případné ztráty z obchodu s vozidlem.' },
       ],
     },
     {
-      title: '9. Ochrana osobních údajů',
+      title: '9. Reklamace',
       blocks: [
-        { p: '9.1. Zpracování osobních údajů Člena se řídí samostatnými Zásadami zpracování osobních údajů zveřejněnými na webových stránkách Poskytovatele.' },
+        { p: '9.1. Případné reklamace týkající se Služby uplatňuje Člen písemně na kontaktní e-mailové adrese Poskytovatele uvedené na webu.' },
+        { p: '9.2. Poskytovatel reklamaci vyřídí bez zbytečného odkladu, nejpozději do 30 dnů ode dne jejího uplatnění, nedohodnou-li se strany jinak.' },
       ],
     },
     {
-      title: '10. Závěrečná ustanovení',
+      title: '10. Ochrana osobních údajů',
       blocks: [
-        { p: '10.1. Tyto Podmínky a vztah mezi Poskytovatelem a Členem se řídí právním řádem České republiky, zejména zákonem č. 89/2012 Sb., občanský zákoník, a v případě Člena-spotřebitele též zákonem č. 634/1992 Sb., o ochraně spotřebitele.' },
-        { p: '10.2. Poskytovatel je oprávněn tyto Podmínky v přiměřeném rozsahu jednostranně měnit, zejména v souvislosti se změnou právních předpisů nebo obsahu Služby. Aktuální znění Podmínek je vždy dostupné na www.flipujkaru.cz. Změna Podmínek se nedotýká práv a povinností vzniklých po dobu účinnosti předchozího znění.' },
-        { p: '10.3. Je-li Člen spotřebitelem, má právo na mimosoudní řešení spotřebitelského sporu vzniklého ze smlouvy uzavřené s Poskytovatelem u České obchodní inspekce (www.coi.cz).' },
-        { p: '10.4. Tyto Podmínky nabývají účinnosti dnem jejich zveřejnění na webových stránkách www.flipujkaru.cz.' },
+        { p: '10.1. Zpracování osobních údajů Člena se řídí samostatnými Zásadami zpracování osobních údajů zveřejněnými na webových stránkách Poskytovatele.' },
+      ],
+    },
+    {
+      title: '11. Závěrečná ustanovení',
+      blocks: [
+        { p: '11.1. Tyto Podmínky a vztah mezi Poskytovatelem a Členem se řídí právním řádem České republiky, zejména zákonem č. 89/2012 Sb., občanský zákoník, a v případě Člena-spotřebitele též zákonem č. 634/1992 Sb., o ochraně spotřebitele.' },
+        { p: '11.2. Poskytovatel je oprávněn tyto Podmínky v přiměřeném rozsahu jednostranně měnit, zejména v souvislosti se změnou právních předpisů nebo obsahu Služby. Aktuální znění Podmínek je vždy dostupné na www.flipujkaru.cz. Změna Podmínek se nedotýká práv a povinností vzniklých po dobu účinnosti předchozího znění.' },
+        { p: '11.3. Je-li Člen spotřebitelem, má právo na mimosoudní řešení spotřebitelského sporu vzniklého ze smlouvy uzavřené s Poskytovatelem u České obchodní inspekce (www.coi.cz).' },
+        { p: '11.4. Tyto Podmínky nabývají účinnosti dnem jejich zveřejnění na webových stránkách www.flipujkaru.cz.' },
       ],
     },
   ],

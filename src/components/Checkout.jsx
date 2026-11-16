@@ -23,6 +23,7 @@ export default function Checkout() {
   const [promoCode, setPromoCode] = useState(''); // slevový kód — uplatní se už při vytvoření platby
   const [promoOpen, setPromoOpen] = useState(false);
   const [billing, setBilling] = useState(DEFAULT_BILLING); // délka členství — jde změnit i tady
+  const [terms, setTerms] = useState(false); // souhlas s obchodními podmínkami (povinný)
 
   // Reset při otevření + zámek scrollu
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function Checkout() {
       setMethod('card');
       setProcessing(false);
       setError('');
+      setTerms(false);
       setBilling(checkout.billing || DEFAULT_BILLING); // předvol variantu z ceníku
       // Kód z odkazu (?promo=…) předvyplníme
       const urlPromo = new URLSearchParams(window.location.search).get('promo');
@@ -45,6 +47,7 @@ export default function Checkout() {
   const { plan } = checkout;
   const total = billing.price;
   const period = billing.period;
+  const trial = billing.trialDays > 0; // měsíční varianta: první měsíc zdarma
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const cardValid = method !== 'card' || (form.email.includes('@') && form.card.replace(/\s/g, '').length === 16 && form.exp.length === 5 && form.cvc.length >= 3);
@@ -57,6 +60,7 @@ export default function Checkout() {
 
   // Reálná platba: vytvoříme Stripe Checkout Session na backendu a přesměrujeme
   const goToStripe = async () => {
+    if (!terms) { setError('Pro pokračování je nutné souhlasit s obchodními podmínkami.'); return; }
     if (!STRIPE_READY) { setStep(1); return; } // fallback na demo pokladnu
     setProcessing(true);
     setError('');
@@ -66,7 +70,7 @@ export default function Checkout() {
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: billing.priceId, email: form.email || undefined, planName: plan.name, billing: billing.id, userId: user?.id, tg: getTg(), promoCode: promoCode.trim() || undefined }),
+        body: JSON.stringify({ priceId: billing.priceId, email: form.email || undefined, planName: plan.name, billing: billing.id, userId: user?.id, tg: getTg(), promoCode: promoCode.trim() || undefined, termsAccepted: terms }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.url) { setError(data.error || 'Nepodařilo se vytvořit platbu. Zkus to prosím znovu.'); setProcessing(false); return; }
@@ -152,11 +156,24 @@ export default function Checkout() {
               </div>
 
               <div className="mt-4 space-y-2 rounded-2xl border border-white/10 bg-ink-850 p-5 text-sm">
-                <div className="flex justify-between text-zinc-400"><span>Cena za {period}</span><span>{czk(total)}</span></div>
-                <div className="flex justify-between border-t border-white/5 pt-2 font-display text-lg font-bold text-white">
-                  <span>Celkem</span><span>{czk(total)}</span>
-                </div>
-                <p className="text-xs text-zinc-500">Vč. DPH. {billing.note}, zrušíš kdykoli.</p>
+                {trial ? (
+                  <>
+                    <div className="flex justify-between text-zinc-400"><span>První měsíc</span><span className="font-semibold text-accent">Zdarma</span></div>
+                    <div className="flex justify-between text-zinc-400"><span>Od 2. měsíce</span><span>{czk(total)} / {period}</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2 font-display text-lg font-bold text-white">
+                      <span>Dnes zaplatíš</span><span>{czk(0)}</span>
+                    </div>
+                    <p className="text-xs text-zinc-500">Vč. DPH. Kartu zadáš teď, první platba {czk(total)} se strhne automaticky po 30 dnech a dál každý měsíc. Zrušíš kdykoli. Měsíc zdarma platí pro nové členy.</p>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between text-zinc-400"><span>Cena za {period}</span><span>{czk(total)}</span></div>
+                    <div className="flex justify-between border-t border-white/5 pt-2 font-display text-lg font-bold text-white">
+                      <span>Celkem</span><span>{czk(total)}</span>
+                    </div>
+                    <p className="text-xs text-zinc-500">Vč. DPH. {billing.note}, zrušíš kdykoli.</p>
+                  </>
+                )}
               </div>
 
               {/* E-mail (předvyplní se na Stripe) */}
@@ -173,6 +190,21 @@ export default function Checkout() {
                 )}
               </div>
 
+              {/* Souhlas s obchodními podmínkami — povinný (čl. 1.3, 5.3, 7.2 Podmínek) */}
+              <label className="mt-4 flex cursor-pointer items-start gap-3 text-xs leading-relaxed text-zinc-400">
+                <input
+                  type="checkbox"
+                  checked={terms}
+                  onChange={(e) => { setTerms(e.target.checked); if (e.target.checked) setError(''); }}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#39FF14]"
+                />
+                <span>
+                  Souhlasím s{' '}
+                  <a href="/obchodni-podminky" target="_blank" rel="noopener noreferrer" className="text-accent underline hover:no-underline">obchodními podmínkami</a>
+                  , s automatickým obnovováním členství a strháváním plateb z mé karty a se zahájením poskytování služby před uplynutím 14denní lhůty pro odstoupení od smlouvy.
+                </span>
+              </label>
+
               {error && (
                 <p className="mt-3 flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
@@ -181,10 +213,10 @@ export default function Checkout() {
 
               <button
                 onClick={goToStripe}
-                disabled={processing}
+                disabled={processing || !terms}
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-semibold text-ink-950 shadow-glow transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Přesměrovávám na platbu…</> : <><Lock className="h-4 w-4" /> Pokračovat k bezpečné platbě</>}
+                {processing ? <><Loader2 className="h-4 w-4 animate-spin" /> Přesměrovávám na platbu…</> : <><Lock className="h-4 w-4" /> {trial ? 'Začít měsíc zdarma' : 'Pokračovat k bezpečné platbě'}</>}
               </button>
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-zinc-500">
                 <ShieldCheck className="h-3.5 w-3.5 text-accent" /> Platbu zpracuje Stripe · karty, Apple&nbsp;/&nbsp;Google&nbsp;Pay
