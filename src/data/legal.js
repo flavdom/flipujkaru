@@ -70,7 +70,7 @@ export const OBCHODNI_PODMINKY = {
       title: '5. Cena a platební podmínky',
       blocks: [
         { p: '5.1. U měsíčního balíčku je zkušební období (první měsíc) poskytováno zdarma. Od začátku druhého měsíce a dále se každý měsíc automaticky strhává členský poplatek ve výši dle aktuálního ceníku. U balíčků na 4 a 12 měsíců se členský poplatek strhává při Aktivaci a poté automaticky na začátku každého dalšího fakturačního období.' },
-        { p: '5.2. Stržení platby za následující období probíhá automaticky z platební karty, kterou Člen zadal při objednávce, a to zpravidla 1–3 dny před začátkem dalšího fakturačního období.' },
+        { p: '5.2. Stržení platby za následující období probíhá automaticky z platební karty, kterou Člen zadal při objednávce, a to v den začátku dalšího fakturačního období.' },
         { p: '5.3. Člen výslovně souhlasí s uložením údajů platební karty u platebního poskytovatele a s automatickým strháváním opakujících se plateb.' },
         { p: '5.4. Poskytovatel vystaví Členovi daňový doklad za každé uhrazené období a zašle jej na e-mailovou adresu uvedenou v objednávce.' },
         { p: '5.5. V případě neúspěšného stržení platby Poskytovatel Člena informuje a poskytne přiměřenou lhůtu k nápravě. Po marném uplynutí této lhůty může být členství pozastaveno nebo ukončeno.' },
@@ -79,9 +79,9 @@ export const OBCHODNI_PODMINKY = {
     {
       title: '6. Výpověď a ukončení členství',
       blocks: [
-        { p: '6.1. Členství lze vypovědět kdykoli. Výpovědní lhůta činí jeden měsíc a počíná běžet dnem doručení výpovědi Poskytovateli.' },
-        { p: '6.2. Výpověď je nutno zaslat písemně (e-mailem na kontaktní adresu uvedenou na webu) nebo prostřednictvím členského účtu, je-li tato možnost k dispozici. Výpověď musí být doručena nejpozději 3 pracovní dny před plánovaným datem stržení další platby, má-li se vztahovat již na následující období.' },
-        { p: '6.3. Po uplynutí výpovědní lhůty přístup ke Službě zaniká a další platby již nebudou strhávány. Již uhrazené poplatky se nevracejí (s výjimkou případů podle čl. 4 nebo zákonného práva na odstoupení).' },
+        { p: '6.1. Členství lze vypovědět kdykoli. Členství pak skončí uplynutím aktuálního předplaceného období (u zkušebního období jeho koncem) a další platby již nebudou strhávány.' },
+        { p: '6.2. Výpověď je nutno zaslat písemně (e-mailem na kontaktní adresu uvedenou na webu) nebo prostřednictvím členského účtu. Aby se vztahovala již na následující období, musí být doručena nejpozději 3 pracovní dny před datem stržení další platby.' },
+        { p: '6.3. Skončením členství přístup ke Službě zaniká. Již uhrazené poplatky se nevracejí (s výjimkou případů podle čl. 4 nebo zákonného práva na odstoupení).' },
         { p: '6.4. Poskytovatel může členství ukončit s okamžitou účinností v případě závažného porušení těchto Podmínek nebo etického kodexu komunity.' },
       ],
     },
