@@ -80,7 +80,7 @@ export default function AuthModal() {
           {pendingStripeSession && (
             <div className="rounded-xl border border-accent/30 bg-accent-soft p-3 text-sm text-accent">
               <p className="flex items-start gap-2">
-                <PartyPopper className="mt-0.5 h-4 w-4 shrink-0" /> Platba proběhla! Dokonči si účet a hned ti aktivujeme členství.
+                <PartyPopper className="mt-0.5 h-4 w-4 shrink-0" /> Objednávka je hotová! Dokonči si účet a hned ti aktivujeme členství.
               </p>
               {/* Vstup do Telegram skupiny tady, ne v plovoucí liště — ta by na mobilu zakryla formulář */}
               <a href={telegramLink(pendingStripeSession.sessionId)} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 font-semibold text-ink-950 shadow-glow transition hover:brightness-110">
