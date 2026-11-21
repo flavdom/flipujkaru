@@ -27,3 +27,10 @@ export function useMobiledeManufacturers() {
 export function useMobiledeModels(manufacturer) {
   return useAsync(() => dealsApi.mobiledeModels(manufacturer), [manufacturer]);
 }
+
+export function useUndervaluedDetail(externalId, params) {
+  return useAsync(
+    () => (externalId ? dealsApi.undervaluedDetail(externalId, params) : Promise.resolve(null)),
+    [externalId, JSON.stringify(params)],
+  );
+}

@@ -3,6 +3,9 @@ import { Car, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CARS, FLIPS, FILTERS, MARKET_VIEWS } from '../data/content.js';
 import { supabase } from '../lib/supabase.js';
 import { useApp } from '../AppContext.jsx';
+import { initialData } from '../lib/initialData.js';
+import { navigate, goBackOr } from '../lib/router.js';
+import { carSlug, carMeta } from '../seo/site.js';
 import Reveal from './Reveal.jsx';
 import CarCard from './CarCard.jsx';
 import FlipCard from './FlipCard.jsx';
@@ -59,6 +62,7 @@ function Pager({ page, totalPages, onChange }) {
 const mapCar = (r) => {
   const images = Array.isArray(r.images) && r.images.length ? r.images : r.image_url ? [r.image_url] : [];
   return {
+    id: r.id, slug: r.id ? carSlug(r) : null, status: r.status,
     brand: r.brand, model: r.model, year: r.year, km: r.km, price: r.price,
     category: r.category, engine: r.engine, condition: r.condition, vat: r.vat,
     badge: r.badge_text ? { text: r.badge_text, tone: r.badge_tone || 'accent' } : null,
@@ -74,6 +78,7 @@ const mapFlip = (r) => {
   const repair = Number(r.repair_cost) || 0;
   const sell = Number(r.sell_price) || Number(r.price) || 0;
   return {
+    id: r.id, slug: r.id ? carSlug(r) : null,
     brand: r.brand, model: r.model, year: r.year,
     buy, repair, sell,
     weeks: r.flip_weeks || null,
@@ -87,12 +92,20 @@ const mapFlip = (r) => {
   };
 };
 
-export default function Marketplace() {
-  const [view, setView] = useState('sale'); // 'sale' | 'flips'
+/**
+ * Bazar + úspěšné flipy.
+ *  routeView  — samostatná stránka (/bazar = 'sale', /nase-flipy = 'flips'); přepínač pak mění adresu
+ *  carSlug    — /auto/:slug → otevřený detail auta (prodané auto = detail flipu)
+ */
+export default function Marketplace({ routeView = null, carSlug: openSlug = null }) {
+  const [localView, setLocalView] = useState('sale'); // 'sale' | 'flips' (úvodní stránka)
   const [filter, setFilter] = useState('vse');
   const [activeFlip, setActiveFlip] = useState(null); // otevřený detail flipu
   const [activeCar, setActiveCar] = useState(null); // otevřený detail auta
-  const [rows, setRows] = useState(null); // řádky z DB (null = ještě se načítá)
+  // Řádky z DB (null = ještě se načítá). Start z dat zapečených při prerenderu → HTML i první
+  // render se shodují; čerstvá data se dotáhnou hned potom (fresh = už z DB).
+  const [rows, setRows] = useState(() => initialData().cars ?? null);
+  const [fresh, setFresh] = useState(false);
   const [page, setPage] = useState(1);
   const sectionRef = useRef(null);
   const { siteText: t } = useApp();
@@ -112,21 +125,31 @@ export default function Marketplace() {
         .order('created_at', { ascending: false })
         .then(({ data, error }) => {
           if (cancelled) return;
-          if (!error && data) setRows(data);
+          if (!error && data) { setRows(data); setFresh(true); }
           else if (retry) setTimeout(() => fetchCars(false), 800);
-          else setRows([]); // DB nedostupná → statický fallback
+          else { setRows((r) => r ?? []); setFresh(true); } // DB nedostupná → zapečená data / statický fallback
         });
     };
     fetchCars();
     return () => { cancelled = true; };
   }, []);
 
-  // Navbar odkaz „Naše Flipy" přepne záložku bez zdvihání stavu do AppContext.
+  // Detail z adresy /auto/:slug
+  const routeRow = openSlug && rows ? rows.find((r) => r.id && carSlug(r) === openSlug) : null;
+  const routeSold = routeRow?.status === 'sold';
+  const routeMissing = !!openSlug && fresh && !routeRow;
+  const routeCar = useMemo(() => (routeRow && !routeSold ? mapCar(routeRow) : null), [routeRow, routeSold]);
+  const routeFlip = useMemo(() => (routeRow && routeSold ? mapFlip(routeRow) : null), [routeRow, routeSold]);
+  const view = routeView || (openSlug ? (routeSold ? 'flips' : 'sale') : localView);
+  const setView = (v) => {
+    if (routeView || openSlug) navigate(v === 'flips' ? '/nase-flipy' : '/bazar');
+    else setLocalView(v);
+  };
+
+  // Detail auta má vlastní title (HTML ze serveru ho má už z funkce /auto)
   useEffect(() => {
-    const onSetView = (e) => setView(e.detail);
-    window.addEventListener('marketplace:setview', onSetView);
-    return () => window.removeEventListener('marketplace:setview', onSetView);
-  }, []);
+    if (routeRow) document.title = carMeta(routeRow).title;
+  }, [routeRow]);
 
   // Dokud DB neodpoví, ukazuj skeletony — jinak by na okamžik problikl statický demo seznam.
   const loading = !!supabase && rows === null;
@@ -156,9 +179,17 @@ export default function Marketplace() {
     if (top != null && top < 0) sectionRef.current.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Zavření detailu z adresy → zpět (přišel-li z webu), jinak na seznam
+  const closeRouteDetail = () => goBackOr(routeSold ? '/nase-flipy' : '/bazar');
+
   return (
     <section ref={sectionRef} id="marketplace" className="relative py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-6">
+        {routeMissing && (
+          <p className="mb-8 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Tohle auto už v nabídce není. Podívej se na ostatní prověřené kusy níže.
+          </p>
+        )}
         {/* Hlavička */}
         <Reveal className="max-w-2xl">
           <span className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t.market_eyebrow || 'Marketplace'}</span>
@@ -216,7 +247,7 @@ export default function Marketplace() {
                 ? Array.from({ length: 3 }, (_, i) => <CardSkeleton key={i} />)
                 : pageItems.map((car, i) => (
                     <Reveal key={`${curPage}-${i}-${car.brand}${car.model}`} delay={i * 40}>
-                      <CarCard car={car} onOpen={() => setActiveCar(car)} />
+                      <CarCard car={car} onOpen={() => (car.slug ? navigate(`/auto/${car.slug}`) : setActiveCar(car))} />
                     </Reveal>
                   ))}
             </div>
@@ -235,13 +266,13 @@ export default function Marketplace() {
                 ? Array.from({ length: 3 }, (_, i) => <CardSkeleton key={i} />)
                 : pageItems.map((flip, i) => (
                     <Reveal key={`${curPage}-${i}-${flip.brand}${flip.model}`} delay={i * 40}>
-                      <FlipCard flip={flip} onOpen={() => setActiveFlip(flip)} />
+                      <FlipCard flip={flip} onOpen={() => (flip.slug ? navigate(`/auto/${flip.slug}`) : setActiveFlip(flip))} />
                     </Reveal>
                   ))}
             </div>
             {!loading && <Pager page={curPage} totalPages={totalPages} onChange={goToPage} />}
             <div className="mt-10 text-center">
-              <a href="#cenik" className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-semibold text-ink-950 shadow-glow transition hover:brightness-110 hover:scale-[1.02]">
+              <a href="/cenik" className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-semibold text-ink-950 shadow-glow transition hover:brightness-110 hover:scale-[1.02]">
                 Chci flipovat taky <TrendingUp className="w-4 h-4" />
               </a>
             </div>
@@ -250,14 +281,14 @@ export default function Marketplace() {
       </div>
 
       {/* Detail auta + flipu — mountují se až při otevření */}
-      {activeCar && (
+      {(activeCar || routeCar) && (
         <Suspense fallback={null}>
-          <CarDetailModal car={activeCar} onClose={() => setActiveCar(null)} />
+          <CarDetailModal car={activeCar || routeCar} onClose={activeCar ? () => setActiveCar(null) : closeRouteDetail} />
         </Suspense>
       )}
-      {activeFlip && (
+      {(activeFlip || routeFlip) && (
         <Suspense fallback={null}>
-          <FlipModal flip={activeFlip} onClose={() => setActiveFlip(null)} />
+          <FlipModal flip={activeFlip || routeFlip} onClose={activeFlip ? () => setActiveFlip(null) : closeRouteDetail} />
         </Suspense>
       )}
     </section>

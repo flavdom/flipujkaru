@@ -3,17 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FlipujKáru — Odemkni zisk na čtyřech kolech</title>
-    <meta name="description" content="Bazar prověřených aut a prémiová car-flipping akademie. Kup chytře, prodej se ziskem." />
+    <!--head-->
+    <title>FlipujKáru — bazar prověřených aut a car-flipping akademie</title>
+    <meta name="description" content="Bazar prověřených aut, prodej auta za tebe a car-flipping akademie. Kup chytře, prodej se ziskem." />
+    <!--/head-->
 
-    <!-- Favicon = naše logo (inline SVG) -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%2308080a'/%3E%3Cpath d='M8 27a12 12 0 0 1 24 0' fill='none' stroke='%2339FF14' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M20 26 L27.5 12.5' stroke='%2339FF14' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='26' r='3' fill='%2339FF14'/%3E%3C/svg%3E" />
+    <!-- Ikony (soubory v public/ — generuje scripts/make-icons.mjs) -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Fonty se self-hostují (viz src/main.jsx) — žádné render-blocking Google Fonts -->
     <meta name="theme-color" content="#08080a" />
+    <!-- Bez JavaScriptu ukaž obsah, který se jinak odkrývá animací při scrollu -->
+    <noscript><style>.reveal{opacity:1!important;transform:none!important}</style></noscript>
+    <!--data-->
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--app--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

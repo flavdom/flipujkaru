@@ -299,42 +299,6 @@ export const BENEFITS = [
   { icon: 'ShieldCheck', title: 'Právně bez starostí', text: 'Smlouvy, daně, DPH i reklamace. Flipuj s jistotou, ne s obavami z papírů.' },
 ];
 
-/** Recenze studentů pro nekonečný slider (marquee).
- *  Bez fotek — jen barevný odznak s iniciálami (ReviewCard v StudentReviews.jsx).
- *  stars = počet hvězd */
-export const REVIEWS = [
-  { name: 'Petr S.', role: 'Akademie 3 týdny', initials: 'PS', stars: 5, text: 'První flip mi vydělal 35 000 Kč už po 3 týdnech v akademii. Nečekal jsem to tak rychle.', stat: '+35 000 Kč' },
-  { name: 'Martin K.', role: 'Člen 8 měsíců', initials: 'MK', stars: 5, text: 'Kalkulačka a komunita mi ušetřily desítky chyb. Druhý flip čistého 62 000 Kč.', stat: '+62 000 Kč' },
-  { name: 'Tereza V.', role: 'Členka 1 rok', initials: 'TV', stars: 5, text: 'Z koníčku se stal vedlejší příjem. Za rok 9 aut, průměrná marže 18 %.', stat: '9 flipů / rok' },
-  { name: 'David P.', role: 'Člen 10 měsíců', initials: 'DP', stars: 5, text: '1:1 servis se mi vrátil hned u druhého auta. Analýza inzerátu od týmu = jiná liga.', stat: 'ROI 240 %' },
-  { name: 'Jana M.', role: 'Akademie 5 měsíců', initials: 'JM', stars: 5, text: 'Bála jsem se, že autům nerozumím. Systém mě provedl krok za krokem k prvnímu zisku.', stat: '+28 000 Kč' },
-  { name: 'Lukáš R.', role: 'Člen 1 rok', initials: 'LR', stars: 5, text: 'Insider tipy na auta jsou zlato. Koupil jsem pod cenou a prodal za týden.', stat: '+41 000 Kč' },
-  { name: 'Ondřej B.', role: 'Člen 6 měsíců', initials: 'OB', stars: 5, text: 'Discord komunita je nabitá. Když nevím, do hodiny mám odpověď od profíků.', stat: '4 flipy' },
-  { name: 'Klára N.', role: 'Členka 9 měsíců', initials: 'KN', stars: 5, text: 'Individuální podpora mi pomohla vyladit prodejní inzeráty. Auta teď mizí dvakrát rychleji.', stat: 'ROI 190 %' },
-  { name: 'Filip H.', role: 'Akademie 2 měsíce', initials: 'FH', stars: 5, text: 'Nikdy jsem netušil, kolik chyb dělám při focení a popisu inzerátu. Po úpravě podle checklistu se auto prodalo za 4 dny.', stat: '+19 000 Kč' },
-  { name: 'Michaela D.', role: 'Členka 4 měsíce', initials: 'MD', stars: 5, text: 'Jako žena jsem se bazaru trochu bála. Komunita mě podržela od prvního telefonátu s prodejcem.', stat: '+33 000 Kč' },
-  { name: 'Tomáš K.', role: 'Člen 1 rok', initials: 'TK', stars: 5, text: 'Hlídací pes mi našel Octavii 40 tisíc pod cenou. Do týdne pryč se ziskem.', stat: '+40 000 Kč' },
-  { name: 'Barbora Š.', role: 'Akademie 6 týdnů', initials: 'BŠ', stars: 5, text: 'Kalkulačka ROI mě zachránila před koupí auta, které by se prodávalo se ztrátou.', stat: 'Ušetřeno 25 000 Kč' },
-  { name: 'Jakub V.', role: 'Člen 8 měsíců', initials: 'JV', stars: 5, text: 'Materiály o dovozu ze zahraničí jsou k nezaplacení. Auto z Německa jsem přivezl bez jediné chyby v papírech.', stat: '+58 000 Kč' },
-  { name: 'Eliška P.', role: 'Členka 1 rok', initials: 'EP', stars: 5, text: 'Za rok se ze mě stala pravidelná flipperka. Šest aut, žádné se ztrátou.', stat: '6 flipů / rok' },
-  { name: 'Marek Z.', role: 'Akademie 3 měsíce', initials: 'MZ', stars: 5, text: 'Síť prověřených mechaniků mi ušetřila desítky hodin hledání a spoustu peněz za předražené opravy.', stat: '+22 000 Kč' },
-  { name: 'Simona R.', role: 'Členka 5 měsíců', initials: 'SR', stars: 5, text: 'Nejvíc mi dala právní stránka — smlouvy a DPH už řeším s klidem, ne s obavami.', stat: '+31 000 Kč' },
-  { name: 'Adam N.', role: 'Člen 2 roky', initials: 'AN', stars: 5, text: 'Flipuju při zaměstnání jako vedlejšák. Za dva roky přes 15 aut a stabilní přivýdělek.', stat: '15 flipů' },
-  { name: 'Veronika L.', role: 'Akademie 2 měsíce', initials: 'VL', stars: 5, text: 'Nejlepší investice do sebe, co jsem letos udělala. Kurz dává smysl krok za krokem.', stat: '+26 000 Kč' },
-  { name: 'Patrik M.', role: 'Člen 7 měsíců', initials: 'PM', stars: 5, text: 'Live feed algoritmu je návykový. Zavolal jsem na inzerát 6 minut po zveřejnění a byl jsem první.', stat: '+47 000 Kč' },
-  { name: 'Nikola B.', role: 'Členka 3 měsíce', initials: 'NB', stars: 5, text: 'Bez technického vzdělání jsem se bála koupit auto s vadou. Checklist prohlídky mi dal jistotu.', stat: '+21 000 Kč' },
-  { name: 'Vojtěch S.', role: 'Člen 1 rok', initials: 'VS', stars: 5, text: 'Prodejní inzeráty podle šablony z akademie prodávají o dost rychleji než ty moje původní.', stat: '+36 000 Kč' },
-  { name: 'Kateřina H.', role: 'Akademie 4 měsíce', initials: 'KH', stars: 5, text: 'Q&A s týmem jednou měsíčně je super — konkrétní odpovědi na konkrétní auto, ne obecné rady.', stat: '+24 000 Kč' },
-  { name: 'Radek F.', role: 'Člen 9 měsíců', initials: 'RF', stars: 5, text: 'Vyjednávání jsem se naučil z materiálů a ušetřil při nákupu skoro 30 tisíc.', stat: 'Ušetřeno 30 000 Kč' },
-  { name: 'Lenka J.', role: 'Členka 1 rok', initials: 'LJ', stars: 5, text: 'Auta beru jako druhé zaměstnání. Systém a data z akademie z toho udělaly předvídatelný byznys.', stat: '8 flipů / rok' },
-  { name: 'Štěpán D.', role: 'Akademie 5 týdnů', initials: 'ŠD', stars: 5, text: 'Nikdy jsem neopravoval auto, teď vím přesně, komu zavolat a kolik má oprava reálně stát.', stat: '+18 000 Kč' },
-  { name: 'Zuzana K.', role: 'Členka 6 měsíců', initials: 'ZK', stars: 5, text: 'Komunita mi doporučila kupce dřív, než jsem stihla dát inzerát ven.', stat: '+45 000 Kč' },
-  { name: 'Daniel R.', role: 'Člen 2 roky', initials: 'DR', stars: 5, text: 'Za dva roky se z koníčku stal vážný přivýdělek vedle práce. Bez akademie bych dodnes tápal.', stat: '12 flipů' },
-  { name: 'Petra V.', role: 'Akademie 3 měsíce', initials: 'PV', stars: 5, text: 'Konečně rozumím, proč se jedno auto prodává hned a druhé měsíc leží. Data z platformy nelžou.', stat: '+27 000 Kč' },
-  { name: 'Matěj O.', role: 'Člen 4 měsíce', initials: 'MO', stars: 5, text: 'Support odpovídá fakt rychle, i o víkendu. Poradili mi s reklamací během hodiny.', stat: '+20 000 Kč' },
-  { name: 'Anna Č.', role: 'Členka 8 měsíců', initials: 'AČ', stars: 5, text: 'Přechod od jednoho flipu za rok k pravidelnému příjmu byl rychlejší, než jsem čekala.', stat: '+52 000 Kč' },
-];
-
 /** Cenový plán — jediné členství, jedna cena, ročně.
  *  1:1 schůzky se zakladateli a kompletní asistence s dovozem auta (health
  *  check, opravy, přepis do ČR) jsou samostatná placená služba nad rámec
@@ -632,14 +596,16 @@ export const COMPANY = {
 export const PAYMENTS = ['Visa', 'Mastercard', 'Apple Pay', 'Google Pay', 'Bankovní převod'];
 
 /** Navigační odkazy */
+// href = samostatná stránka; section = id sekce na úvodní stránce (zvýraznění při scrollu)
 export const NAV_LINKS = [
-  { href: '#proc-my', label: 'Proč my' },
-  { href: '#marketplace', label: 'Bazar' },
-  { href: '#marketplace', label: 'Naše Flipy', view: 'flips' },
-  { href: '#kalkulacka', label: 'Kalkulačka' },
-  { href: '#edukace', label: 'Akademie' },
-  { href: '#cenik', label: 'Členství' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '/#proc-my', label: 'Proč my', section: 'proc-my' },
+  { href: '/bazar', label: 'Bazar', section: 'marketplace' },
+  { href: '/prodej-auta', label: 'Prodej auta', badge: 'NOVÉ', section: 'prodej-auta' },
+  { href: '/nase-flipy', label: 'Naše Flipy' },
+  { href: '/kalkulacka', label: 'Kalkulačka', section: 'kalkulacka' },
+  { href: '/akademie', label: 'Akademie', section: 'edukace' },
+  { href: '/cenik', label: 'Členství', section: 'cenik' },
+  { href: '/faq', label: 'FAQ', section: 'faq' },
 ];
 
 /** Osobní servis pro členy — placená doplňková služba NAD RÁMEC členství

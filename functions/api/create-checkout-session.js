@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 import { json } from '../_utils.js';
 
 /** Zkušební měsíc zdarma — jen u MĚSÍČNÍ varianty (interval month, count 1). */
@@ -23,20 +24,41 @@ async function hadSubscription(stripe, email) {
  * Cloudflare Pages Function: vytvoří bezpečnou Stripe Checkout Session
  * pro OPAKOVANÉ PŘEDPLATNÉ. Běží na serveru — tajný klíč se nikdy nedostane do prohlížeče.
  *
- * Frontend pošle { priceId, email } → vrátíme { url } a přesměrujeme uživatele na Stripe.
+ * Platit smí jen PŘIHLÁŠENÝ uživatel s OVĚŘENÝM e-mailem (Authorization: Bearer
+ * <Supabase JWT>). E-mail i ID účtu bereme z tokenu, ne z těla požadavku —
+ * prohlížeči se nevěří. Frontend pošle { priceId, … } → vrátíme { url }.
  */
 export async function onRequestPost({ request, env }) {
   const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
   try {
-    const { priceId, email, planName, billing, yearly, userId, tg, promoCode, termsAccepted } = (await request.json()) || {};
+    const { priceId, planName, billing, yearly, tg, promoCode, termsAccepted } = (await request.json()) || {};
     if (!priceId) return json({ error: 'Chybí priceId.' }, 400);
     // Souhlas s obchodními podmínkami (čl. 1.3, 5.3, 7.2) je povinný.
     if (termsAccepted !== true) return json({ error: 'Pro pokračování je nutné souhlasit s obchodními podmínkami.', field: 'terms' }, 400);
 
+    // Kdo platí — ověřený token, ověřený e-mail.
+    const token = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
+    if (!token) return json({ error: 'Pro objednávku se nejdřív přihlas.', code: 'auth_required' }, 401);
+    const admin = createClient(env.VITE_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    const user = userData?.user;
+    if (userErr || !user) return json({ error: 'Přihlášení vypršelo, přihlas se prosím znovu.', code: 'auth_required' }, 401);
+    if (!user.email_confirmed_at) {
+      return json({ error: 'Nejdřív potvrď svůj e-mail (odkaz jsme ti poslali při registraci).', code: 'email_unconfirmed' }, 403);
+    }
+    const email = user.email;
+    const userId = user.id;
+
+    // Už aktivní členství → druhé předplatné by se strhávalo souběžně.
+    const { data: profile } = await admin.from('profiles').select('plan, subscription_status').eq('id', userId).single();
+    if (profile?.plan && profile.subscription_status === 'active') {
+      return json({ error: 'Členství už máš aktivní.', code: 'already_member' }, 409);
+    }
+
     // Odkud uživatel přišel (pro návratové URL)
     const origin = request.headers.get('origin') || new URL(request.url).origin;
-    const meta = { planName: planName || '', billing: billing || '', yearly: String(!!yearly), userId: userId || '' };
+    const meta = { planName: planName || '', billing: billing || '', yearly: String(!!yearly), userId };
     // Atribuce z Telegramu (?tg=…) — jen když je; Stripe metadata hodnota max. 500 znaků.
     if (typeof tg === 'string' && tg.trim()) meta.tg = tg.trim().slice(0, 500);
     // Doklad o souhlasu s podmínkami (čas odeslání objednávky).
@@ -61,8 +83,8 @@ export async function onRequestPost({ request, env }) {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription', // opakované předplatné
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: email || undefined,
-      client_reference_id: userId || undefined, // ke kterému účtu platba patří
+      customer_email: email,
+      client_reference_id: userId, // ke kterému účtu platba patří
       ...(discounts ? { discounts } : { allow_promotion_codes: true }), // slevové kódy
       billing_address_collection: 'auto',
       metadata: meta,

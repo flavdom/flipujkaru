@@ -2,10 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [react()],
   build: {
-    rollupOptions: {
+    rollupOptions: isSsrBuild ? {} : {
       output: {
         // Oddělené vendor chunky → lepší cachování + 3D mimo initial bundle
         manualChunks(id) {
@@ -27,4 +27,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

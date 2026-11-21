@@ -72,7 +72,7 @@ export default function Mission() {
 
             <Reveal delay={300}>
               <a
-                href="#cenik"
+                href="/cenik"
                 className="flex items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-4 font-semibold text-ink-950 shadow-glow transition hover:brightness-110 hover:scale-[1.01]"
               >
                 Přidej se ke komunitě
