@@ -8,9 +8,15 @@
 
    ── Nastavení ve Stripe ──────────────────────────────────
    Jeden Product „Členství AKADEMIE" + tři OPAKOVANÉ (recurring) Prices:
-     • 1 měsíc   → interval = month, count 1   → 1 990 Kč
-     • 4 měsíce  → interval = month, count 4   → 5 990 Kč
-     • 12 měsíců → interval = year  (nebo month×12) → 14 990 Kč
+     • 1 měsíc   → interval = month, count 1   →   499 Kč (první měsíc zdarma)
+     • 4 měsíce  → interval = month, count 4   → 1 599 Kč
+     • 12 měsíců → interval = year  (nebo month×12) → 3 999 Kč
+   Zkušební měsíc zdarma u měsíční varianty NENÍ nastavený na Price ve Stripe —
+   přidává ho server (functions/api/create-checkout-session.js, TRIAL_DAYS)
+   podle intervalu ceny. `trialDays` níže slouží jen pro texty v UI.
+   POZOR: Price ID níže jsou ještě STARÉ ceny (1 990 / 5 990 / 14 990 Kč).
+   Po vytvoření nových cen ve Stripe je nahraď (nebo nastav GitHub
+   Variables VITE_STRIPE_PRICE_* v repozitáři — přebijí je při buildu).
    Výchozí hodnoty priceId níže jsou LIVE (ostrý provoz) — zapečou se do
    produkčního buildu. Pro lokální testování je přebij TEST hodnotami
    v .env (VITE_STRIPE_PRICE_*, viz .env.example); ty se do produkčního
@@ -25,16 +31,17 @@ export const BILLING_OPTIONS = [
     id: 'monthly',
     label: '1 měsíc',
     months: 1,
-    price: 1990,
+    price: 499,
     period: 'měsíc',
     note: 'Účtováno každý měsíc',
+    trialDays: 30, // první měsíc zdarma (uplatní server, viz výše)
     priceId: env.VITE_STRIPE_PRICE_MONTHLY || 'price_1ULUavCMiFqAOCKZxJt0KSrc',
   },
   {
     id: 'quarterly',
     label: '4 měsíce',
     months: 4,
-    price: 5990,
+    price: 1599,
     period: '4 měsíce',
     note: 'Účtováno každé 4 měsíce',
     badge: 'Oblíbené',
@@ -44,7 +51,7 @@ export const BILLING_OPTIONS = [
     id: 'yearly',
     label: '12 měsíců',
     months: 12,
-    price: 14990,
+    price: 3999,
     period: 'rok',
     note: 'Účtováno ročně',
     badge: 'Nejvýhodnější',

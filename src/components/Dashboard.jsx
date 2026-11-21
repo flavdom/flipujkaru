@@ -19,6 +19,7 @@ import CourseRow from './dashboard/CourseRow.jsx';
 // Panely → lazy, načtou se až po kliknutí na danou záložku
 const AdminCars = lazy(() => import('./AdminCars.jsx'));
 const TextsAdmin = lazy(() => import('./TextsAdmin.jsx'));
+const HlidacAdmin = lazy(() => import('./hlidac/HlidacAdmin.jsx'));
 const MyFlips = lazy(() => import('./dashboard/MyFlips.jsx'));
 const Leaderboard = lazy(() => import('./dashboard/Leaderboard.jsx'));
 const CalcPanel = lazy(() => import('./dashboard/CalcPanel.jsx'));
@@ -55,7 +56,8 @@ export default function Dashboard() {
       { key: 'doporuceni', label: 'Doporučení', icon: 'Inbox', count: newReferrals },
       { key: 'prodej', label: 'Prodej aut', icon: 'CarFront', count: newSellRequests },
       { key: 'admin', label: 'Správa aut', icon: 'Car' },
-      { key: 'texty', label: 'Texty webu', icon: 'Type' }]
+      { key: 'texty', label: 'Texty webu', icon: 'Type' },
+      { key: 'hlidac', label: 'Hlídač', icon: 'Radar' }]
     : DASH_NAV;
 
   return (
@@ -117,6 +119,7 @@ export default function Dashboard() {
             {tab === 'nastaveni' && <SettingsPanel user={user} planName={planName} paidUntil={fmtDate(member?.renews)} isAdmin={isAdmin} signOut={signOut} setTab={setTab} />}
             {tab === 'admin' && isAdmin && <AdminCars />}
             {tab === 'texty' && isAdmin && <TextsAdmin />}
+            {tab === 'hlidac' && isAdmin && <HlidacAdmin />}
           </Suspense>
         </main>
       </div>

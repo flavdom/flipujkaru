@@ -304,7 +304,7 @@ export const BENEFITS = [
  *  check, opravy, přepis do ČR) jsou samostatná placená služba nad rámec
  *  členství — viz sekce „Osobní servis pro členy" (WhyUs.jsx). */
 export const PLANS = [
-  { name: 'AKADEMIE', price: 14990, period: 'rok', tagline: 'Vše, co potřebuješ k prvnímu i desátému flipu', featured: true, cta: 'Chci se stát členem',
+  { name: 'AKADEMIE', price: 3999, period: 'rok', tagline: 'Vše, co potřebuješ k prvnímu i desátému flipu', featured: true, cta: 'Chci se stát členem',
     features: [
       'Kompletní know-how car flippingu od A do Z',
       'Každý týden seznam aut napříč Evropou pod tržní cenou',
