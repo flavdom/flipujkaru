@@ -182,7 +182,7 @@ export default function FlipModal({ flip, onClose }) {
             </>
           )}
 
-          <a href="#cenik" onClick={onClose} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-semibold text-ink-950 transition hover:brightness-110">
+          <a href="/cenik" onClick={onClose} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-semibold text-ink-950 transition hover:brightness-110">
             Chci se naučit tohle taky
           </a>
         </div>

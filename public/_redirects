@@ -1,1 +1,4 @@
-/*  /index.html  200
+# Bez SPA fallbacku: každá stránka má vlastní HTML (prerender), neznámé cesty → 404.html se stavem 404.
+# Staré adresy → nové stránky
+/index.html  /  301
+/bazar/  /bazar  301

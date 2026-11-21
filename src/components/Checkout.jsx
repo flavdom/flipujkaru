@@ -4,6 +4,7 @@ import { useApp } from '../AppContext.jsx';
 import { czk } from '../data/content.js';
 import { STRIPE_READY, DEFAULT_BILLING, BILLING_OPTIONS, perMonth } from '../config/billing.js';
 import { getTg } from '../lib/telegram.js';
+import { supabase } from '../lib/supabase.js';
 
 const STEPS = ['Souhrn', 'Platba', 'Hotovo'];
 const MONTHLY_RATE = perMonth(BILLING_OPTIONS.find((o) => o.id === 'monthly') || BILLING_OPTIONS[0]);
@@ -35,7 +36,7 @@ export default function Checkout() {
       // Kód z odkazu (?promo=…) předvyplníme
       const urlPromo = new URLSearchParams(window.location.search).get('promo');
       if (urlPromo) { setPromoCode(urlPromo.toUpperCase()); setPromoOpen(true); }
-      setForm((f) => ({ ...f, email: user?.email || f.email })); // předvyplň e-mail účtu
+      setForm((f) => ({ ...f, email: user?.email || f.email })); // e-mail účtu (u Stripe zamčený)
       document.body.style.overflow = 'hidden';
     }
     return () => { document.body.style.overflow = ''; };
@@ -63,10 +64,13 @@ export default function Checkout() {
     try {
       // Uložíme volbu, ať po návratu ze Stripe víme, co aktivovat
       localStorage.setItem('fk_pending', JSON.stringify({ planName: plan.name, billing: billing.id, email: form.email }));
+      // Platit jde jen přihlášeným účtem s ověřeným e-mailem — server to ověří z tokenu.
+      const { data: { session } } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+      if (!session) { setError('Pro objednávku se nejdřív přihlas.'); setProcessing(false); return; }
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId: billing.priceId, email: form.email || undefined, planName: plan.name, billing: billing.id, userId: user?.id, tg: getTg(), promoCode: promoCode.trim() || undefined }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ priceId: billing.priceId, planName: plan.name, billing: billing.id, tg: getTg(), promoCode: promoCode.trim() || undefined }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.url) { setError(data.error || 'Nepodařilo se vytvořit platbu. Zkus to prosím znovu.'); setProcessing(false); return; }
@@ -159,9 +163,9 @@ export default function Checkout() {
                 <p className="text-xs text-zinc-500">Vč. DPH. {billing.note}, zrušíš kdykoli.</p>
               </div>
 
-              {/* E-mail (předvyplní se na Stripe) */}
+              {/* E-mail účtu (ověřený) — platba se k němu naváže, proto nejde měnit */}
               <div className="mt-4">
-                <Field label="E-mail" value={form.email} onChange={set('email')} placeholder="tvuj@email.cz" type="email" />
+                <Field label="E-mail účtu" value={form.email} onChange={set('email')} type="email" readOnly={!!user} />
               </div>
 
               {/* Slevový kód — uplatníme ho při vytvoření platby (na stránce Stripe ho pak uvidíš odečtený) */}

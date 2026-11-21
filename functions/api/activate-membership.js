@@ -9,8 +9,8 @@ import { json } from '../_utils.js';
  *
  * Dva režimy:
  *  • { sessionId } — po návratu z platby: ověří konkrétní Checkout Session.
- *  • {} (bez sessionId) — „dohledání": plátce zavřel záložku dřív, než si založil
- *    účet (pay-first), a vrací se jinde. Najde aktivní předplatné u Stripe podle
+ *  • {} (bez sessionId) — „dohledání" pro starší platby z doby pay-first (platba
+ *    proběhla dřív, než si plátce založil účet), a vrací se jinde. Najde aktivní předplatné u Stripe podle
  *    e-mailu účtu, které ještě nepatří žádnému jinému účtu.
  */
 
@@ -91,6 +91,9 @@ export async function onRequestPost({ request, env }) {
       const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['subscription'] });
       const paid = session.payment_status === 'paid' || session.status === 'complete';
       if (!paid) return json({ error: 'Platba neproběhla.' }, 400);
+      // Platba vytvořená přihlášeným účtem patří jen jemu.
+      const owner = session.client_reference_id || session.metadata?.userId || null;
+      if (owner && owner !== user.id) return json({ error: 'Tato platba patří jinému účtu.' }, 403);
       sub = session.subscription;
       if (typeof sub === 'string') sub = await stripe.subscriptions.retrieve(sub);
       if (await linkedElsewhere(admin, sub?.id, user.id)) return json({ error: 'Tato platba už patří jinému účtu.' }, 409);

@@ -1,21 +1,14 @@
 import { useState } from 'react';
-import { Instagram, Youtube, Facebook, Music2, Heart, Mail, Phone, ShieldCheck } from 'lucide-react';
+import { Heart, Mail, Phone, ShieldCheck } from 'lucide-react';
 import { LogoMark } from './Logo.jsx';
 import { COMPANY, PAYMENTS } from '../data/content.js';
 import Reveal from './Reveal.jsx';
 
 /** Sloupce odkazů v patičce */
 const COLUMNS = [
-  { title: 'Bazar', links: [['Všechna auta', '#marketplace'], ['Sportovní', '#marketplace'], ['Investiční kusy', '#marketplace'], ['Vykoupíme tvé auto', '#']] },
-  { title: 'Akademie', links: [['Členství', '#cenik'], ['Kalkulačka zisku', '#kalkulacka'], ['Jak to funguje', '#edukace'], ['FAQ', '#faq']] },
-  { title: 'Společnost', links: [['O nás', '#mise'], ['Kontakt', '#footer'], ['Obchodní podmínky', '/obchodni-podminky'], ['Zásady cookies', '/cookies'], ['Ochrana údajů (GDPR)', '/gdpr']] },
-];
-
-const SOCIALS = [
-  { Icon: Instagram, label: 'Instagram' },
-  { Icon: Youtube, label: 'YouTube' },
-  { Icon: Facebook, label: 'Facebook' },
-  { Icon: Music2, label: 'TikTok' },
+  { title: 'Bazar', links: [['Auta na prodej', '/bazar'], ['Naše flipy', '/nase-flipy'], ['Prodáme ti auto', '/prodej-auta'], ['Nacenit auto', '/prodej-auta/formular']] },
+  { title: 'Akademie', links: [['O akademii', '/akademie'], ['Členství', '/cenik'], ['Kalkulačka zisku', '/kalkulacka'], ['FAQ', '/faq']] },
+  { title: 'Společnost', links: [['O nás', '/#mise'], ['Kontakt', '#footer'], ['Obchodní podmínky', '/obchodni-podminky'], ['Zásady cookies', '/cookies'], ['Ochrana údajů (GDPR)', '/gdpr']] },
 ];
 
 /** Formulář newsletteru s potvrzením */
@@ -63,7 +56,7 @@ export default function Footer() {
         {/* Odkazy */}
         <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2">
-            <a href="#hero" className="flex items-center gap-2.5">
+            <a href="/" className="flex items-center gap-2.5">
               <span className="grid place-items-center w-10 h-10 rounded-xl bg-ink-850 border border-white/10">
                 <LogoMark />
               </span>
@@ -82,18 +75,6 @@ export default function Footer() {
               <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-zinc-300 transition hover:text-accent">
                 <Phone className="h-4 w-4 text-accent" /> {COMPANY.phone}
               </a>
-            </div>
-            <div className="mt-5 flex gap-3">
-              {SOCIALS.map(({ Icon, label }) => (
-                <a
-                  key={label}
-                  href="#"
-                  aria-label={label}
-                  className="grid place-items-center w-10 h-10 rounded-xl border border-white/10 text-zinc-400 transition hover:border-accent/40 hover:text-accent"
-                >
-                  <Icon className="w-5 h-5" />
-                </a>
-              ))}
             </div>
           </div>
 

@@ -19,7 +19,7 @@ export function LogoMark({ className = 'w-7 h-7' }) {
 
 export default function Logo({ showWordmark = true }) {
   return (
-    <a href="#hero" className="group flex items-center gap-2.5" aria-label="FlipujKáru domů">
+    <a href="/" className="group flex items-center gap-2.5" aria-label="FlipujKáru domů">
       <span className="grid place-items-center w-10 h-10 rounded-xl bg-ink-850 border border-white/10 overflow-hidden transition group-hover:border-accent/50">
         <LogoMark />
       </span>

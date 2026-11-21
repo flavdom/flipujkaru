@@ -32,7 +32,7 @@ async function get(path, params) {
 
 export const dealsApi = {
   undervalued: (params) => get('/undervalued', params),
-  undervaluedDetail: (externalId) => get(`/undervalued/${encodeURIComponent(externalId)}`),
+  undervaluedDetail: (externalId, params) => get(`/undervalued/${encodeURIComponent(externalId)}`, params),
   mobiledeManufacturers: () => get('/meta/mobilede/manufacturers'),
   mobiledeModels: (manufacturer) => get('/meta/mobilede/models', { manufacturer }),
 };

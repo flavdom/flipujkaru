@@ -6,29 +6,49 @@ import { telegramLink } from '../lib/telegram.js';
 
 /** Přihlášení / registrace / reset hesla (e-mail + heslo přes Supabase). */
 export default function AuthModal() {
-  const { authOpen, closeAuth, signIn, signUp, resetPassword, afterAuth, pendingStripeSession } = useApp();
+  const { authOpen, closeAuth, signIn, signUp, resetPassword, resendConfirmation, updatePassword, recoveryMode, afterAuth, pendingStripeSession, pendingPlan } = useApp();
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'reset'
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [unconfirmed, setUnconfirmed] = useState(''); // e-mail čekající na potvrzení → nabídni „poslat znovu"
 
-  // Pay-first: platba už proběhla, teď jen dokončíme účet → rovnou registrace, e-mail předvyplněný.
+  // Zaplaceno, ale vypršela session → přihlášení e-mailem z platby.
+  // Rozdělaná objednávka bez účtu → rovnou registrace.
   useEffect(() => {
-    if (authOpen && pendingStripeSession) {
-      setMode('register');
+    if (!authOpen) return;
+    setUnconfirmed('');
+    if (recoveryMode) {
+      setMode('newpass'); setError(''); setInfo('');
+    } else if (pendingStripeSession) {
+      setMode('login');
       setForm((f) => ({ ...f, email: pendingStripeSession.email || f.email }));
+    } else if (pendingPlan) {
+      setMode('register');
     }
-  }, [authOpen, pendingStripeSession]);
+  }, [authOpen, pendingStripeSession, pendingPlan, recoveryMode]);
 
   if (!authOpen) return null;
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
-  const switchMode = (m) => { setMode(m); setError(''); setInfo(''); };
+  const switchMode = (m) => { setMode(m); setError(''); setInfo(''); setUnconfirmed(''); };
+
+  const resend = async () => {
+    setBusy(true); setError('');
+    try {
+      await resendConfirmation(unconfirmed);
+      setInfo(`Ověřovací e-mail jsme poslali znovu na ${unconfirmed}. Mrkni i do spamu.`);
+    } catch (err) {
+      setError(translate(err.message));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    setBusy(true); setError(''); setInfo('');
+    setBusy(true); setError(''); setInfo(''); setUnconfirmed('');
     try {
       if (mode === 'login') {
         await signIn(form.email, form.password);
@@ -36,12 +56,22 @@ export default function AuthModal() {
       } else if (mode === 'register') {
         const { session } = await signUp(form.email, form.password, form.name);
         if (session) afterAuth(); // potvrzení e-mailu je vypnuté → rovnou přihlášen
-        else setInfo('Hotovo! Poslali jsme ti ověřovací e-mail — klikni na odkaz a pak se přihlas.');
+        else {
+          setUnconfirmed(form.email);
+          setInfo(pendingPlan
+            ? `Skoro hotovo! Poslali jsme ti ověřovací e-mail na ${form.email}. Klikni na odkaz v něm a vrátíme tě rovnou k platbě.`
+            : `Hotovo! Poslali jsme ti ověřovací e-mail na ${form.email} — klikni na odkaz a jsi přihlášen(a).`);
+        }
+      } else if (mode === 'newpass') {
+        await updatePassword(form.password);
+        setInfo('Heslo je změněné. Jsi přihlášen(a).');
+        setTimeout(() => closeAuth(), 1500);
       } else {
         await resetPassword(form.email);
         setInfo('Poslali jsme ti e-mail s odkazem na obnovu hesla.');
       }
     } catch (err) {
+      if (/Email not confirmed/i.test(err.message || '')) setUnconfirmed(form.email);
       setError(translate(err.message));
     } finally {
       setBusy(false);
@@ -52,6 +82,7 @@ export default function AuthModal() {
     login: { h: 'Přihlášení', sub: 'Vítej zpět. Pokračuj do svého účtu.' },
     register: { h: 'Vytvořit účet', sub: 'Pár vteřin a jsi součástí komunity.' },
     reset: { h: 'Obnova hesla', sub: 'Zadej e-mail a pošleme ti odkaz.' },
+    newpass: { h: 'Nové heslo', sub: 'Zvol si nové heslo ke svému účtu.' },
   }[mode];
 
   return (
@@ -80,7 +111,7 @@ export default function AuthModal() {
           {pendingStripeSession && (
             <div className="rounded-xl border border-accent/30 bg-accent-soft p-3 text-sm text-accent">
               <p className="flex items-start gap-2">
-                <PartyPopper className="mt-0.5 h-4 w-4 shrink-0" /> Platba proběhla! Dokonči si účet a hned ti aktivujeme členství.
+                <PartyPopper className="mt-0.5 h-4 w-4 shrink-0" /> Platba proběhla! Přihlas se svým účtem a hned ti aktivujeme členství.
               </p>
               {/* Vstup do Telegram skupiny tady, ne v plovoucí liště — ta by na mobilu zakryla formulář */}
               <a href={telegramLink(pendingStripeSession.sessionId)} target="_blank" rel="noopener noreferrer" className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 font-semibold text-ink-950 shadow-glow transition hover:brightness-110">
@@ -91,19 +122,31 @@ export default function AuthModal() {
           {mode === 'register' && (
             <Field icon={User} label="Jméno" value={form.name} onChange={set('name')} placeholder="Jan Novák" autoComplete="name" required />
           )}
-          <Field icon={Mail} label="E-mail" type="email" value={form.email} onChange={set('email')} placeholder="tvuj@email.cz" autoComplete="email" required readOnly={!!pendingStripeSession} />
+          {mode !== 'newpass' && (
+            <Field icon={Mail} label="E-mail" type="email" value={form.email} onChange={set('email')} placeholder="tvuj@email.cz" autoComplete="email" required readOnly={!!pendingStripeSession} />
+          )}
           {pendingStripeSession && (
-            <p className="-mt-1 text-xs text-zinc-500">Členství aktivujeme na e-mail, kterým jsi zaplatil(a). Pokud tu účet už máš, přihlas se jím.</p>
+            <p className="-mt-1 text-xs text-zinc-500">Členství aktivujeme k účtu, ze kterého jsi platil(a).</p>
+          )}
+          {!pendingStripeSession && pendingPlan && mode === 'register' && !info && (
+            <p className="rounded-xl border border-white/10 bg-ink-850 p-3 text-xs text-zinc-400">
+              Před platbou si založ účet — pošleme ti e-mail s odkazem na ověření adresy. Po potvrzení pokračuješ rovnou k platbě.
+            </p>
           )}
           {mode !== 'reset' && (
-            <Field icon={Lock} label="Heslo" type="password" value={form.password} onChange={set('password')} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={6} />
+            <Field icon={Lock} type="password" value={form.password} onChange={set('password')} placeholder="••••••••" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} label={mode === 'newpass' ? 'Nové heslo' : 'Heslo'} required minLength={6} />
           )}
 
           {error && <p className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /> {error}</p>}
           {info && <p className="flex items-start gap-2 rounded-xl border border-accent/30 bg-accent-soft p-3 text-sm text-accent"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> {info}</p>}
+          {unconfirmed && (
+            <button type="button" onClick={resend} disabled={busy} className="w-full text-center text-sm font-medium text-zinc-400 transition hover:text-white disabled:opacity-50">
+              E-mail nedorazil? <span className="text-accent hover:underline">Poslat ověření znovu</span>
+            </button>
+          )}
 
           <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-accent py-3.5 font-semibold text-ink-950 shadow-glow transition enabled:hover:brightness-110 disabled:opacity-50">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{mode === 'login' ? 'Přihlásit se' : mode === 'register' ? 'Vytvořit účet' : 'Poslat odkaz'} <ArrowRight className="h-4 w-4" /></>}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{mode === 'login' ? 'Přihlásit se' : mode === 'register' ? 'Vytvořit účet' : mode === 'newpass' ? 'Uložit heslo' : 'Poslat odkaz'} <ArrowRight className="h-4 w-4" /></>}
           </button>
 
           {/* Přepínání režimů */}
@@ -132,6 +175,7 @@ function translate(msg = '') {
   if (/Invalid login credentials/i.test(msg)) return 'Špatný e-mail nebo heslo.';
   if (/already registered|already exists/i.test(msg)) return 'Tento e-mail už je registrovaný. Přihlas se.';
   if (/Email not confirmed/i.test(msg)) return 'Nejdřív potvrď e-mail (klikni na odkaz v e-mailu).';
+  if (/security purposes|rate limit|after \d+ seconds/i.test(msg)) return 'Moc pokusů za sebou — zkus to prosím za minutu.';
   if (/Password should be at least/i.test(msg)) return 'Heslo musí mít aspoň 6 znaků.';
   if (/not configured/i.test(msg)) return 'Účty zatím nejsou nastavené (chybí klíče Supabase).';
   return msg;

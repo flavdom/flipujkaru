@@ -38,7 +38,7 @@ export default function PersonalService() {
                   <Lock className="h-4 w-4 shrink-0 text-accent" /> Dostupné pro členy AKADEMIE — nejdřív roční členství, pak se domluvíme individuálně.
                 </p>
                 <a
-                  href="#cenik"
+                  href="/cenik"
                   className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3.5 font-semibold text-ink-950 shadow-glow transition hover:brightness-110"
                 >
                   Chci se stát členem <ArrowRight className="h-4 w-4" />

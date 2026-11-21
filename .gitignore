@@ -19,3 +19,6 @@ data/ukazky_flipu/
 # Zdroj (PDF + courses.js) a z něj generovaný seed drž mimo git.
 data/courses/
 supabase/courses_seed.sql
+
+# Pracovní poznámky (obsahují přihlašovací údaje) — nepatří do veřejného repa
+upravy.md

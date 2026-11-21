@@ -60,7 +60,7 @@ export async function onRequestPost({ request, env }) {
         const paid = session.payment_status === 'paid' || session.status === 'complete';
         // Ke kterému účtu platba patří (nastaveno v create-checkout-session).
         const userId = session.client_reference_id || session.metadata?.userId || null;
-        if (!paid || !userId) break; // pay-first bez účtu doplní activate-membership po registraci
+        if (!paid || !userId) break; // bez účtu (starší pay-first platby) doplní activate-membership
 
         let sub = null;
         if (session.subscription) {

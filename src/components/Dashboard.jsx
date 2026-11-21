@@ -1,9 +1,9 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  LayoutDashboard, Radar, GraduationCap, Receipt, Settings, PiggyBank, Car, Trophy,
+  LayoutDashboard, Radar, GraduationCap, Receipt, Settings, Car, Trophy,
   LogOut, ArrowLeft, ExternalLink, Download, Check, TrendingUp, ChevronRight, ChevronLeft, Type,
   Calculator, ArrowRight, Sparkles, SlidersHorizontal, RotateCcw, Table2, Gauge,
-  ArrowUpDown, ArrowUp, ArrowDown, Search, Loader2, Send,
+  ArrowUpDown, ArrowUp, ArrowDown, Search, Loader2, Send, HandCoins, Inbox, CarFront,
 } from 'lucide-react';
 import { useApp } from '../AppContext.jsx';
 import { czk, kmFmt } from '../data/content.js';
@@ -11,7 +11,7 @@ import { supabase } from '../lib/supabase.js';
 import { dealsApi } from '../lib/dealsApi.js';
 import { coursesApi } from '../lib/coursesApi.js';
 import { useUndervalued, useMobiledeManufacturers, useMobiledeModels } from '../hooks/useDeals.js';
-import { DASH_NAV, DASH_STATS, INVOICES, ONBOARDING } from '../data/member.js';
+import { DASH_NAV } from '../data/member.js';
 import { LogoMark } from './Logo.jsx';
 import { telegramLink } from '../lib/telegram.js';
 import CourseRow from './dashboard/CourseRow.jsx';
@@ -23,19 +23,39 @@ const MyFlips = lazy(() => import('./dashboard/MyFlips.jsx'));
 const Leaderboard = lazy(() => import('./dashboard/Leaderboard.jsx'));
 const CalcPanel = lazy(() => import('./dashboard/CalcPanel.jsx'));
 const Courses = lazy(() => import('./dashboard/Courses.jsx'));
+const DealDetailModal = lazy(() => import('./dashboard/DealDetailModal.jsx'));
+const FinanceServices = lazy(() => import('./dashboard/FinanceServices.jsx'));
+const ReferralsAdmin = lazy(() => import('./dashboard/ReferralsAdmin.jsx'));
+const SellRequestsAdmin = lazy(() => import('./dashboard/SellRequestsAdmin.jsx'));
 
-const NAV_ICONS = { LayoutDashboard, Radar, GraduationCap, Receipt, Settings, Car, Type, Calculator, TrendingUp, Sparkles, Trophy };
-const STAT_ICONS = { PiggyBank, Car, Trophy };
+const NAV_ICONS = { LayoutDashboard, Radar, GraduationCap, Receipt, Settings, Car, Type, Calculator, TrendingUp, Sparkles, Trophy, HandCoins, Inbox, CarFront };
+/** Konec zaplaceného období jako 15. 7. 2026, nebo null */
+const fmtDate = (iso) => (iso ? new Date(iso).toLocaleDateString('cs-CZ') : null);
 
 export default function Dashboard() {
-  const { user, member, isAdmin, backToSite, signOut } = useApp();
-  const [tab, setTab] = useState('prehled');
+  const { user, member, isAdmin, backToSite, signOut, dashTab } = useApp();
+  const [tab, setTab] = useState(dashTab || 'prehled');
+  useEffect(() => { if (dashTab) setTab(dashTab); }, [dashTab]);
   const [courseId, setCourseId] = useState(null); // otevřený kurz v Mých materiálech
   const openCourse = (id) => { setCourseId(id); setTab('materialy'); };
   const planName = member?.plan?.name || null; // null = zatím bez členství
-  // Adminovi přidáme do menu „Správa aut"
+  // Počet nových doporučení (finanční služby) → odznak v menu admina
+  const [newReferrals, setNewReferrals] = useState(0);
+  const [newSellRequests, setNewSellRequests] = useState(0); // nové žádosti „Prodáme ti auto"
+  useEffect(() => {
+    if (!isAdmin || !supabase) return;
+    supabase.from('referrals').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      .then(({ count }) => setNewReferrals(count || 0));
+    supabase.from('sell_requests').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      .then(({ count }) => setNewSellRequests(count || 0));
+  }, [isAdmin]);
+  // Adminovi přidáme do menu správu doporučení, aut a textů
   const navItems = isAdmin
-    ? [...DASH_NAV, { key: 'admin', label: 'Správa aut', icon: 'Car' }, { key: 'texty', label: 'Texty webu', icon: 'Type' }]
+    ? [...DASH_NAV,
+      { key: 'doporuceni', label: 'Doporučení', icon: 'Inbox', count: newReferrals },
+      { key: 'prodej', label: 'Prodej aut', icon: 'CarFront', count: newSellRequests },
+      { key: 'admin', label: 'Správa aut', icon: 'Car' },
+      { key: 'texty', label: 'Texty webu', icon: 'Type' }]
     : DASH_NAV;
 
   return (
@@ -73,6 +93,8 @@ export default function Dashboard() {
                   className={`inline-flex shrink-0 items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-medium transition ${active ? 'bg-accent text-ink-950' : 'text-zinc-400 hover:bg-white/5 hover:text-white'}`}
                 >
                   {Icon && <Icon className="h-4 w-4" />} {n.label}
+                  {n.badge && <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${active ? 'bg-ink-950/15 text-ink-950' : 'bg-accent-soft text-accent'}`}>{n.badge}</span>}
+                  {n.count > 0 && <span className={`grid min-w-[1.25rem] place-items-center rounded-full px-1.5 text-[11px] font-bold ${active ? 'bg-ink-950 text-accent' : 'bg-accent text-ink-950'}`}>{n.count}</span>}
                 </button>
               );
             })}
@@ -82,14 +104,17 @@ export default function Dashboard() {
         {/* Obsah */}
         <main className="min-w-0 flex-1">
           <Suspense fallback={<div className="flex items-center gap-2 text-sm text-zinc-400"><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/15 border-t-accent" /> Načítám…</div>}>
-            {tab === 'prehled' && <Overview user={user} planName={planName} isAdmin={isAdmin} backToSite={backToSite} setTab={setTab} openCourse={openCourse} />}
+            {tab === 'prehled' && <Overview user={user} planName={planName} paidUntil={fmtDate(member?.renews)} isAdmin={isAdmin} backToSite={backToSite} setTab={setTab} openCourse={openCourse} />}
             {tab === 'flipy' && <MyFlips />}
             {tab === 'zebricky' && <Leaderboard />}
             {tab === 'kalkulacka' && <CalcPanel />}
             {tab === 'doporucene' && <RecommendedFlips />}
             {tab === 'materialy' && <Courses courseId={courseId} setCourseId={setCourseId} />}
+            {tab === 'financni' && <FinanceServices />}
+            {tab === 'doporuceni' && isAdmin && <ReferralsAdmin onCountChange={setNewReferrals} />}
+            {tab === 'prodej' && isAdmin && <SellRequestsAdmin onCountChange={setNewSellRequests} />}
             {tab === 'faktury' && <Invoices planName={planName} />}
-            {tab === 'nastaveni' && <SettingsPanel user={user} planName={planName} isAdmin={isAdmin} signOut={signOut} />}
+            {tab === 'nastaveni' && <SettingsPanel user={user} planName={planName} paidUntil={fmtDate(member?.renews)} isAdmin={isAdmin} signOut={signOut} setTab={setTab} />}
             {tab === 'admin' && isAdmin && <AdminCars />}
             {tab === 'texty' && isAdmin && <TextsAdmin />}
           </Suspense>
@@ -107,7 +132,7 @@ const QUICK = [
   { tab: 'materialy', label: 'Materiály', icon: GraduationCap },
 ];
 
-function Overview({ user, planName, isAdmin, backToSite, setTab, openCourse }) {
+function Overview({ user, planName, paidUntil, isAdmin, backToSite, setTab, openCourse }) {
   const { telegramSession, telegramLinked } = useApp(); // Checkout Session poslední platby → „Propojit Telegram"
   const [recommended, setRecommended] = useState([]);
   const [courses, setCourses] = useState(null);
@@ -129,7 +154,14 @@ function Overview({ user, planName, isAdmin, backToSite, setTab, openCourse }) {
     .map((c) => ({ id: c.id, title: c.title, lessons: c.outline.length, done: c.done.size }))
     .sort((a, b) => (b.done > 0 && b.done < b.lessons) - (a.done > 0 && a.done < a.lessons))
     .slice(0, 3);
-  const lessonStarted = (courses || []).some((c) => c.done.size > 0);
+
+  // Počet vlastních flipů (Moje flipy → user_flips)
+  const [flipCount, setFlipCount] = useState(null);
+  useEffect(() => {
+    if (!supabase || !user?.id) return;
+    supabase.from('user_flips').select('id', { count: 'exact', head: true }).eq('user_id', user.id)
+      .then(({ count, error }) => setFlipCount(error ? null : count ?? 0));
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
@@ -148,76 +180,52 @@ function Overview({ user, planName, isAdmin, backToSite, setTab, openCourse }) {
         ))}
       </div>
 
-      {/* Karta členství — aktivní / admin (plný přístup bez předplatného) / zatím bez členství */}
-      {planName ? (
-        <div className="grad-border rounded-2xl p-5 shadow-glow">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-zinc-400">Aktivní členství</div>
-              <div className="mt-0.5 font-display text-2xl font-bold text-white">Plán {planName}</div>
-              <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-accent"><span className="h-2 w-2 rounded-full bg-accent" /> Aktivní · obnovení 15. 7. 2026</div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {/* Před vstupem do skupiny „Propojit", potom vstup do komunity (bot pustí zpět i po odchodu / na novém telefonu) */}
-              {telegramSession && (
-                <a href={telegramLink(telegramSession)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-ink-950 transition hover:brightness-110">
-                  <Send className="h-4 w-4" /> {telegramLinked ? 'Otevřít komunitu' : 'Propojit Telegram'}
-                </a>
-              )}
-              <button onClick={() => setTab('faktury')} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Spravovat</button>
-            </div>
-          </div>
-        </div>
-      ) : isAdmin ? (
-        <div className="grad-border rounded-2xl p-5 shadow-glow">
-          <div className="text-xs uppercase tracking-wide text-zinc-400">Administrátorský účet</div>
-          <div className="mt-0.5 font-display text-2xl font-bold text-white">Plný přístup</div>
-          <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-accent"><span className="h-2 w-2 rounded-full bg-accent" /> Materiály, doporučené flipy i správa webu bez předplatného</div>
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ink-850 p-5">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-zinc-400">Členství</div>
-            <div className="mt-0.5 font-display text-xl font-bold text-white">Zatím nemáš aktivní členství</div>
-            <div className="mt-1 text-sm text-zinc-400">Odemkni materiály, doporučené flipy i komunitu.</div>
-          </div>
-          <button onClick={() => { backToSite(); setTimeout(() => document.getElementById('cenik')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-glow transition hover:brightness-110">
-            Aktivovat členství
-          </button>
-        </div>
-      )}
-
-      {/* Statistiky */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {DASH_STATS.map((s) => {
-          const Icon = STAT_ICONS[s.icon];
-          return (
-            <div key={s.label} className="rounded-2xl border border-white/10 bg-ink-850 p-5">
-              <Icon className="h-5 w-5 text-accent" />
-              <div className="mt-3 font-display text-2xl font-bold text-white">{s.value}</div>
-              <div className="text-sm text-zinc-400">{s.label}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Onboarding checklist */}
-      <div className="rounded-2xl border border-white/10 bg-ink-850 p-5">
-        <h3 className="font-display font-bold text-white">Tvoje první kroky</h3>
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {ONBOARDING.map((o, i) => {
-            const checked = i === 0 || (o.key === 'kurz' && lessonStarted);
-            return (
-            <div key={o.key} className="flex items-center gap-3 rounded-xl bg-ink-950 px-3 py-2.5">
-              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold ${checked ? 'bg-accent text-ink-950' : 'border border-white/15 text-zinc-500'}`}>{checked ? <Check className="h-3.5 w-3.5" /> : i + 1}</span>
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-white">{o.label}</div>
-                <div className="truncate text-xs text-zinc-500">{o.hint}</div>
+      {/* Členství + počet flipů vedle sebe */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Karta členství — aktivní / admin (plný přístup bez předplatného) / zatím bez členství */}
+        {planName ? (
+          <div className="grad-border rounded-2xl p-5 shadow-glow lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-zinc-400">Aktivní členství</div>
+                <div className="mt-0.5 font-display text-2xl font-bold text-white">Plán {planName}</div>
+                <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-accent"><span className="h-2 w-2 rounded-full bg-accent" /> Aktivní{paidUntil ? ` · platí do ${paidUntil}` : ''}</div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {/* Před vstupem do skupiny „Propojit", potom vstup do komunity (bot pustí zpět i po odchodu / na novém telefonu) */}
+                {telegramSession && (
+                  <a href={telegramLink(telegramSession)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-ink-950 transition hover:brightness-110">
+                    <Send className="h-4 w-4" /> {telegramLinked ? 'Otevřít komunitu' : 'Propojit Telegram'}
+                  </a>
+                )}
+                <button onClick={() => setTab('faktury')} className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Spravovat</button>
               </div>
             </div>
-            );
-          })}
-        </div>
+          </div>
+        ) : isAdmin ? (
+          <div className="grad-border rounded-2xl p-5 shadow-glow lg:col-span-2">
+            <div className="text-xs uppercase tracking-wide text-zinc-400">Administrátorský účet</div>
+            <div className="mt-0.5 font-display text-2xl font-bold text-white">Plný přístup</div>
+            <div className="mt-1 inline-flex items-center gap-1.5 text-sm text-accent"><span className="h-2 w-2 rounded-full bg-accent" /> Materiály, doporučené flipy i správa webu bez předplatného</div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ink-850 p-5 lg:col-span-2">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-zinc-400">Členství</div>
+              <div className="mt-0.5 font-display text-xl font-bold text-white">Zatím nemáš aktivní členství</div>
+              <div className="mt-1 text-sm text-zinc-400">Odemkni materiály, doporučené flipy i komunitu.</div>
+            </div>
+            <button onClick={() => { backToSite(); setTimeout(() => document.getElementById('cenik')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-glow transition hover:brightness-110">
+              Aktivovat členství
+            </button>
+          </div>
+        )}
+
+        <button onClick={() => setTab('flipy')} className="flex flex-col justify-center rounded-2xl border border-white/10 bg-ink-850 p-5 text-left transition hover:border-accent/40">
+          <Car className="h-5 w-5 text-accent" />
+          <div className="mt-3 font-display text-2xl font-bold text-white">{flipCount ?? '—'}</div>
+          <div className="text-sm text-zinc-400">Tvé flipy</div>
+        </button>
       </div>
 
       {/* Doporučená auta */}
@@ -280,6 +288,22 @@ const DEFAULT_FLIP_FILTERS = {
   include_damaged: false, reference: 'median', sort: 'gap_czk', order: 'desc',
 };
 
+/** Uložené výchozí filtry (jen v tomto prohlížeči) — Nastavení / Doporučené flipy. */
+const FLIP_DEFAULTS_KEY = 'fk_flip_defaults';
+function loadFlipDefaults() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FLIP_DEFAULTS_KEY) || 'null');
+    return raw && typeof raw === 'object' ? { ...DEFAULT_FLIP_FILTERS, ...raw } : null;
+  } catch { return null; }
+}
+function saveFlipDefaults(filters) {
+  try {
+    if (filters) localStorage.setItem(FLIP_DEFAULTS_KEY, JSON.stringify(filters));
+    else localStorage.removeItem(FLIP_DEFAULTS_KEY);
+    return true;
+  } catch { return false; }
+}
+
 const flipInputClass =
   'w-full rounded-xl border border-white/10 bg-ink-950 px-3.5 py-2.5 text-sm text-white outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20 disabled:opacity-40';
 
@@ -329,10 +353,13 @@ function RecommendedFlips() {
   // skutečně dotazujeme API. Sladí se jen po „Hledat" (nebo resetu) — API
   // přepočítává celou množinu server-side, takže dotaz na každý stisk klávesy
   // by tabulku zpomalil (stejný důvod jako v algdash).
-  const [filters, setFilters] = useState(DEFAULT_FLIP_FILTERS);
-  const [applied, setApplied] = useState(DEFAULT_FLIP_FILTERS);
+  const [filters, setFilters] = useState(() => loadFlipDefaults() || DEFAULT_FLIP_FILTERS);
+  const [applied, setApplied] = useState(filters);
+  const [savedDefault, setSavedDefault] = useState(false);
+  const saveAsDefault = () => { if (saveFlipDefaults(filters)) { setSavedDefault(true); setTimeout(() => setSavedDefault(false), 2000); } };
   const [page, setPage] = useState(1);
-  const [openingId, setOpeningId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const closeDetail = useCallback(() => setSelectedId(null), []);
 
   const updateFilter = (key, val) => setFilters((f) => ({ ...f, [key]: val, ...(key === 'manufacturer' ? { model: '' } : {}) }));
   const resetFilters = () => { setFilters(DEFAULT_FLIP_FILTERS); setApplied(DEFAULT_FLIP_FILTERS); setPage(1); };
@@ -361,18 +388,6 @@ function RecommendedFlips() {
     setFilters(next);
     setApplied(next);
     setPage(1);
-  };
-
-  const openListing = async (externalId) => {
-    setOpeningId(externalId);
-    try {
-      const detail = await dealsApi.undervaluedDetail(externalId);
-      if (detail?.source_url) window.open(detail.source_url, '_blank', 'noopener,noreferrer');
-    } catch {
-      // tiché selhání — inzerát se prostě neotevře
-    } finally {
-      setOpeningId(null);
-    }
   };
 
   return (
@@ -459,8 +474,11 @@ function RecommendedFlips() {
           </label>
         </div>
 
-        <div className="mt-5 flex items-center justify-end gap-3">
-          {dirty && <span className="text-xs text-amber-400/90">Neuložené změny filtrů</span>}
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+          {dirty && <span className="text-xs text-amber-400/90">Změny filtrů ještě nejsou použité</span>}
+          <button type="button" onClick={saveAsDefault} className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
+            {savedDefault ? <><Check className="h-4 w-4 text-accent" /> Uloženo jako výchozí</> : 'Uložit jako výchozí'}
+          </button>
           <button
             type="submit"
             disabled={!dirty}
@@ -514,7 +532,7 @@ function RecommendedFlips() {
                 </thead>
                 <tbody>
                   {items.map((item) => (
-                    <tr key={item.external_id} className="border-b border-white/5 transition hover:bg-white/5">
+                    <tr key={item.external_id} onClick={() => setSelectedId(item.external_id)} className="cursor-pointer border-b border-white/5 transition hover:bg-white/5">
                       <td className="whitespace-nowrap px-3 py-2.5">
                         <div className="font-medium text-white">{item.manufacturer} {item.model}</div>
                         {item.damaged === true && <div className="text-xs text-red-400">havarovaný</div>}
@@ -531,11 +549,10 @@ function RecommendedFlips() {
                       <td className="whitespace-nowrap px-3 py-2.5 text-right">
                         <button
                           type="button"
-                          onClick={() => openListing(item.external_id)}
-                          disabled={openingId === item.external_id}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110 disabled:opacity-50"
+                          onClick={(e) => { e.stopPropagation(); setSelectedId(item.external_id); }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-bold text-ink-950 transition hover:brightness-110"
                         >
-                          {openingId === item.external_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />} Inzerát
+                          <Search className="h-3.5 w-3.5" /> Detail
                         </button>
                       </td>
                     </tr>
@@ -568,49 +585,149 @@ function RecommendedFlips() {
           </div>
         )}
       </div>
+
+      {selectedId && (
+        <Suspense fallback={null}>
+          <DealDetailModal externalId={selectedId} reference={applied.reference} onClose={closeDetail} />
+        </Suspense>
+      )}
     </div>
   );
 }
 
-/* ---------- Faktury ---------- */
+/* ---------- Faktury (skutečná data ze Stripe přes /api/billing) ---------- */
+const INVOICE_STATUS = {
+  paid: { label: 'Zaplaceno', cls: 'bg-accent-soft text-accent' },
+  open: { label: 'K úhradě', cls: 'bg-amber-500/15 text-amber-400' },
+  uncollectible: { label: 'Nezaplaceno', cls: 'bg-red-500/15 text-red-400' },
+  void: { label: 'Stornováno', cls: 'bg-white/10 text-zinc-400' },
+};
+const fmtUnix = (t) => (t ? new Date(t * 1000).toLocaleDateString('cs-CZ') : '—');
+const fmtMoney = (amount, currency) => new Intl.NumberFormat('cs-CZ', { style: 'currency', currency: (currency || 'czk').toUpperCase(), maximumFractionDigits: 2 }).format(amount);
+
+async function billingFetch(method = 'GET') {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Přihlášení vypršelo, přihlas se prosím znovu.');
+  const res = await fetch('/api/billing', { method, headers: { Authorization: `Bearer ${session.access_token}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Něco se pokazilo.');
+  return data;
+}
+
+/** Tlačítko → zákaznický portál Stripe (karta, faktury, zrušení předplatného). */
+function PortalButton({ children, className, onError }) {
+  const [busy, setBusy] = useState(false);
+  const open = async () => {
+    setBusy(true);
+    try {
+      const { url } = await billingFetch('POST');
+      window.location.href = url;
+    } catch (e) {
+      onError?.(e.message);
+      setBusy(false);
+    }
+  };
+  return (
+    <button onClick={open} disabled={busy} className={className}>
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />} {children}
+    </button>
+  );
+}
+
 function Invoices({ planName }) {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    billingFetch().then(setData).catch((e) => setError(e.message));
+  }, []);
+
+  const sub = data?.subscription;
+  const card = data?.card;
+  const btn = 'inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-50';
+
   return (
     <div className="space-y-5">
       <div>
         <h1 className="inline-flex items-center gap-2 font-display text-2xl font-bold text-white"><Receipt className="h-5 w-5 text-accent" /> Faktury & platby</h1>
-        <p className="mt-1 text-sm text-zinc-400">Historie plateb a způsob úhrady.</p>
+        <p className="mt-1 text-sm text-zinc-400">Historie plateb, platební karta a správa předplatného.</p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ink-850 p-5">
-        <div className="inline-flex items-center gap-3">
-          <span className="grid h-10 w-14 place-items-center rounded-lg border border-white/10 bg-ink-950 text-xs font-bold text-white">VISA</span>
-          <div>
-            <div className="text-sm font-medium text-white">•••• •••• •••• 4242</div>
-            <div className="text-xs text-zinc-500">Platí do 04/29 · plán {planName}</div>
-          </div>
-        </div>
-        <button className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">Změnit kartu</button>
-      </div>
+      {error && <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{error}</p>}
+      {!data && !error && <div className="flex items-center gap-2 text-sm text-zinc-400"><Loader2 className="h-4 w-4 animate-spin" /> Načítám platby…</div>}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10">
-        {INVOICES.map((inv, i) => (
-          <div key={inv.id} className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? 'border-t border-white/5' : ''} bg-ink-850`}>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium text-white">{inv.item}</div>
-              <div className="text-xs text-zinc-500">{inv.id} · {inv.date}</div>
+      {data && !data.customer && (
+        <p className="rounded-2xl border border-white/10 bg-ink-850 p-6 text-center text-sm text-zinc-400">K tomuto účtu zatím nepatří žádná platba.</p>
+      )}
+
+      {data?.customer && (
+        <>
+          {/* Předplatné + karta */}
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-ink-850 p-5">
+            <div className="flex items-center gap-3">
+              {card && <span className="grid h-10 w-14 place-items-center rounded-lg border border-white/10 bg-ink-950 text-[11px] font-bold uppercase text-white">{card.brand}</span>}
+              <div>
+                <div className="text-sm font-medium text-white">
+                  {card ? `•••• ${card.last4} · platí do ${String(card.expMonth).padStart(2, '0')}/${String(card.expYear).slice(-2)}` : 'Platební karta není uložená'}
+                </div>
+                <div className="text-xs text-zinc-500">
+                  {planName ? `Plán ${planName}` : 'Bez aktivního členství'}
+                  {sub?.periodEnd && (sub.cancelAtPeriodEnd
+                    ? <> · <span className="text-amber-400">zrušeno, skončí {fmtUnix(sub.periodEnd)}</span></>
+                    : sub.status === 'active' || sub.status === 'trialing' ? ` · další platba ${fmtUnix(sub.periodEnd)}` : '')}
+                </div>
+              </div>
             </div>
-            <span className="hidden rounded-md bg-accent-soft px-2 py-0.5 text-xs font-bold text-accent sm:inline">{inv.status}</span>
-            <span className="text-sm font-semibold text-white">{czk(inv.amount)}</span>
-            <button aria-label="Stáhnout PDF" className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 text-zinc-400 transition hover:text-white"><Download className="h-4 w-4" /></button>
+            <PortalButton className={btn} onError={setError}>Spravovat předplatné a kartu</PortalButton>
           </div>
-        ))}
-      </div>
+
+          {/* Faktury */}
+          {data.invoices.length === 0 ? (
+            <p className="rounded-2xl border border-white/10 bg-ink-850 p-6 text-center text-sm text-zinc-400">Zatím žádné faktury.</p>
+          ) : (
+            <div className="overflow-hidden rounded-2xl border border-white/10">
+              {data.invoices.map((inv, i) => {
+                const st = INVOICE_STATUS[inv.status] || INVOICE_STATUS.void;
+                return (
+                  <div key={inv.id} className={`flex items-center gap-4 px-5 py-4 ${i > 0 ? 'border-t border-white/5' : ''} bg-ink-850`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-white">{inv.item}</div>
+                      <div className="text-xs text-zinc-500">{inv.number || 'Faktura'} · {fmtUnix(inv.created)}<span className="sm:hidden"> · {st.label}</span></div>
+                    </div>
+                    <span className={`hidden rounded-md px-2 py-0.5 text-xs font-bold sm:inline ${st.cls}`}>{st.label}</span>
+                    <span className="whitespace-nowrap text-sm font-semibold text-white">{fmtMoney(inv.amount, inv.currency)}</span>
+                    {inv.pdf || inv.url ? (
+                      <a href={inv.pdf || inv.url} target="_blank" rel="noopener noreferrer" aria-label="Stáhnout PDF" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 text-zinc-400 transition hover:text-white"><Download className="h-4 w-4" /></a>
+                    ) : <span className="h-9 w-9 shrink-0" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
 
 /* ---------- Nastavení ---------- */
-function SettingsPanel({ user, planName, isAdmin, signOut }) {
+function SettingsPanel({ user, planName, paidUntil, isAdmin, signOut, setTab }) {
+  const savedName = user?.user_metadata?.full_name || '';
+  const [name, setName] = useState(savedName);
+  const [nameState, setNameState] = useState(''); // '' | 'saving' | 'saved' | chybová hláška
+  const [hasFlipDefaults, setHasFlipDefaults] = useState(() => !!loadFlipDefaults());
+  const [portalError, setPortalError] = useState('');
+  useEffect(() => { setName(savedName); }, [savedName]);
+
+  const saveName = async (e) => {
+    e.preventDefault();
+    const full = name.trim();
+    if (!full) { setNameState('Vyplň jméno.'); return; }
+    setNameState('saving');
+    const { error: authErr } = await supabase.auth.updateUser({ data: { full_name: full } });
+    const { error: profErr } = authErr ? { error: null } : await supabase.from('profiles').update({ full_name: full }).eq('id', user.id);
+    setNameState(authErr || profErr ? 'Jméno se nepodařilo uložit, zkus to znovu.' : 'saved');
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -619,33 +736,63 @@ function SettingsPanel({ user, planName, isAdmin, signOut }) {
       </div>
 
       {/* Profil */}
-      <div className="rounded-2xl border border-white/10 bg-ink-850 p-5">
+      <form onSubmit={saveName} className="rounded-2xl border border-white/10 bg-ink-850 p-5">
         <h3 className="font-display font-bold text-white">Profil</h3>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <LabeledInput label="Jméno" defaultValue={user?.user_metadata?.full_name || ''} />
-          <LabeledInput label="E-mail" defaultValue={user?.email || ''} />
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-zinc-400">Jméno a příjmení</span>
+            <input value={name} onChange={(e) => { setName(e.target.value); setNameState(''); }} maxLength={80} autoComplete="name" className={settingsInputClass} />
+            <span className="mt-1 block text-[11px] text-zinc-500">V žebříčcích se zobrazí jako „Jan N."</span>
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-medium text-zinc-400">E-mail</span>
+            <input value={user?.email || ''} readOnly className={`${settingsInputClass} cursor-not-allowed text-zinc-400`} />
+            <span className="mt-1 block text-[11px] text-zinc-500">Změnu e-mailu vyřešíme na predplatne@flipujkaru.cz.</span>
+          </label>
         </div>
-        <button className="mt-4 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:brightness-110">Uložit změny</button>
-      </div>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button type="submit" disabled={nameState === 'saving' || name.trim() === savedName} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">
+            {nameState === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />} Uložit změny
+          </button>
+          {nameState === 'saved' && <span className="inline-flex items-center gap-1.5 text-sm text-accent"><Check className="h-4 w-4" /> Uloženo</span>}
+          {nameState && !['saving', 'saved'].includes(nameState) && <span className="text-sm text-red-400">{nameState}</span>}
+        </div>
+      </form>
 
       {/* Výchozí filtry doporučených flipů */}
       <div className="rounded-2xl border border-white/10 bg-ink-850 p-5">
         <h3 className="font-display font-bold text-white">Výchozí filtry doporučených flipů</h3>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <LabeledInput label="Značky" defaultValue="BMW, Audi, VW" />
-          <LabeledInput label="Max. cena" defaultValue="800 000 Kč" />
-          <LabeledInput label="Min. % pod trhem" defaultValue="10 %" />
-          <LabeledInput label="Lokality" defaultValue="DE, AT, CZ" />
+        <p className="mt-1 text-sm text-zinc-400">
+          {hasFlipDefaults
+            ? 'Máš uložené vlastní výchozí filtry — Doporučené flipy se s nimi otevřou.'
+            : 'Zatím používáš základní filtry. V Doporučených flipech si nastav filtry a klikni na „Uložit jako výchozí".'}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button onClick={() => setTab('doporucene')} className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
+            <SlidersHorizontal className="h-4 w-4" /> Upravit filtry
+          </button>
+          {hasFlipDefaults && (
+            <button onClick={() => { saveFlipDefaults(null); setHasFlipDefaults(false); }} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-400 transition hover:text-white">
+              <RotateCcw className="h-4 w-4" /> Vrátit základní
+            </button>
+          )}
         </div>
-        <button className="mt-4 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">Uložit výchozí filtry</button>
       </div>
 
       {/* Členství */}
       <div className="rounded-2xl border border-white/10 bg-ink-850 p-5">
         <h3 className="font-display font-bold text-white">Členství</h3>
-        <p className="mt-1 text-sm text-zinc-400">Aktuální plán: <span className="font-semibold text-accent">{planName || (isAdmin ? 'administrátor (plný přístup)' : 'žádný')}</span>{planName ? ' · obnovení 15. 7. 2026' : ''}</p>
+        <p className="mt-1 text-sm text-zinc-400">Aktuální plán: <span className="font-semibold text-accent">{planName || (isAdmin ? 'administrátor (plný přístup)' : 'žádný')}</span>{planName && paidUntil ? ` · platí do ${paidUntil}` : ''}</p>
+        {portalError && <p className="mt-3 text-sm text-red-400">{portalError}</p>}
         <div className="mt-4 flex flex-wrap gap-3">
-          <button className="rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:brightness-110">Změnit plán</button>
+          {planName && (
+            <PortalButton onError={setPortalError} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-ink-950 transition hover:brightness-110 disabled:opacity-50">
+              Spravovat předplatné
+            </PortalButton>
+          )}
+          <button onClick={() => setTab('faktury')} className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
+            <Receipt className="h-4 w-4" /> Faktury
+          </button>
           <button onClick={signOut} className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-red-400 transition hover:bg-red-500/20">Odhlásit se</button>
         </div>
       </div>
@@ -653,11 +800,4 @@ function SettingsPanel({ user, planName, isAdmin, signOut }) {
   );
 }
 
-function LabeledInput({ label, defaultValue }) {
-  return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-zinc-400">{label}</span>
-      <input defaultValue={defaultValue} className="w-full rounded-xl border border-white/10 bg-ink-950 px-4 py-2.5 text-sm text-white outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20" />
-    </label>
-  );
-}
+const settingsInputClass = 'w-full rounded-xl border border-white/10 bg-ink-950 px-4 py-2.5 text-sm text-white outline-none transition focus:border-accent/60 focus:ring-2 focus:ring-accent/20';

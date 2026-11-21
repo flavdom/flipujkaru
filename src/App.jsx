@@ -1,19 +1,30 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { AppProvider, useApp } from './AppContext.jsx';
 import SiteLanding from './components/SiteLanding.jsx'; // veřejný web = první obrazovka → eager (LCP)
-import LegalPage from './components/LegalPage.jsx';
 import TelegramJoin from './components/TelegramJoin.jsx';
 import ActivationError from './components/ActivationError.jsx';
-import { LEGAL_PAGES } from './data/legal.js';
+import { installLinkInterceptor, navigate, usePath } from './lib/router.js';
+import { PAGES, NOT_FOUND, SITE_URL, matchRoute } from './seo/site.js';
 
 // Nekritické části → lazy chunky, načtou se až při interakci (mimo initial bundle)
 const Dashboard = lazy(() => import('./components/Dashboard.jsx'));
 const Checkout = lazy(() => import('./components/Checkout.jsx'));
 const AuthModal = lazy(() => import('./components/AuthModal.jsx'));
 
-// Právní stránky (/obchodni-podminky, /cookies, /gdpr) — vlastní URL, žádný
-// router navíc. Vyřešíme čistě cestou v adrese, mimo přihlašování/pokladnu.
-const legalSlug = window.location.pathname.replace(/^\/|\/$/g, '');
+/** Při přechodu mezi stránkami v prohlížeči přepiš title, popis a canonical
+ *  (HTML ze serveru je má správně už od prerenderu; detail auta si je nastaví sám). */
+function setHead(path) {
+  const route = matchRoute(path);
+  if (route.key === '/auto') return;
+  const meta = PAGES[route.key] || NOT_FOUND;
+  document.title = meta.title;
+  const set = (sel, attr, val) => document.head.querySelector(sel)?.setAttribute(attr, val);
+  set('meta[name="description"]', 'content', meta.description);
+  set('meta[property="og:title"]', 'content', meta.title);
+  set('meta[property="og:description"]', 'content', meta.description);
+  set('link[rel="canonical"]', 'href', `${SITE_URL}${route.path}`);
+  set('meta[property="og:url"]', 'content', `${SITE_URL}${route.path}`);
+}
 
 /**
  * Kořen aplikace: přepíná veřejný web ↔ klientskou administraci,
@@ -22,6 +33,15 @@ const legalSlug = window.location.pathname.replace(/^\/|\/$/g, '');
 function Root() {
   const { view, checkout, authOpen, handleCheckoutReturn, hasAccess, membershipLoaded, backToSite, startDefaultCheckout } = useApp();
   const locked = view === 'dashboard' && (!membershipLoaded || !hasAccess);
+  const path = usePath();
+
+  // Interní odkazy <a href="/…"> → bez reloadu stránky
+  useEffect(() => installLinkInterceptor(), []);
+  useEffect(() => { setHead(path); }, [path]);
+  // Staré odkazy na formulář (#nacenit-auto) → vlastní stránka
+  useEffect(() => {
+    if (window.location.hash === '#nacenit-auto') navigate('/prodej-auta/formular', { replace: true });
+  }, []);
 
   // Klientská zóna jen se zaplaceným členstvím (nebo jako admin). Když přístup
   // zmizí (zrušené/neuhrazené předplatné, odhlášení), vrať na web a nabídni platbu.
@@ -30,8 +50,8 @@ function Root() {
   }, [view, membershipLoaded, hasAccess]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Návrat ze Stripe Checkout: ?checkout=success&session_id=… → ověř platbu.
-  // Pay-first: pokud uživatel ještě nemá účet, handleCheckoutReturn otevře
-  // registraci a členství dokončí až po jejím založení.
+  // Vypršela-li mezitím session, handleCheckoutReturn otevře přihlášení
+  // a členství dokončí po něm.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('checkout');
@@ -75,9 +95,6 @@ function FullLoader() {
 }
 
 export default function App() {
-  // Právní stránky nepotřebují přihlašování ani pokladnu → mimo AppProvider.
-  if (LEGAL_PAGES[legalSlug]) return <LegalPage page={LEGAL_PAGES[legalSlug]} />;
-
   return (
     <AppProvider>
       <Root />

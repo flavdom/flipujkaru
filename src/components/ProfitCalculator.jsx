@@ -8,7 +8,7 @@ const MAX_FREE_USES = 3;
 const USES_KEY = 'fk_calc_uses';
 
 function readUses() {
-  return Math.max(0, parseInt(localStorage.getItem(USES_KEY) || '0', 10) || 0);
+  try { return Math.max(0, parseInt(localStorage.getItem(USES_KEY) || '0', 10) || 0); } catch { return 0; } // prerender / privátní režim
 }
 
 /** Posuvník s popiskem a živou hodnotou */
@@ -116,7 +116,7 @@ export default function ProfitCalculator() {
           <div className="mt-4 max-w-md rounded-2xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm font-semibold leading-relaxed text-accent">
             Žádná spekulace, žádná náhoda — systematický nástroj, kterým členové naší komunity zhodnocují úspory.
           </div>
-          <a href="#cenik" className="mt-6 inline-flex items-center gap-2 font-semibold text-accent transition-all hover:gap-3">
+          <a href="/cenik" className="mt-6 inline-flex items-center gap-2 font-semibold text-accent transition-all hover:gap-3">
             Staň se členem <ArrowRight className="w-4 h-4" />
           </a>
         </Reveal>
@@ -172,7 +172,7 @@ export default function ProfitCalculator() {
                   <Lock className="h-6 w-6 text-accent" />
                   <p className="max-w-xs text-sm font-medium text-white">Využil jsi {MAX_FREE_USES} bezplatné výpočty.</p>
                   <a
-                    href="#cenik"
+                    href="/cenik"
                     className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-ink-950 shadow-glow transition hover:brightness-110"
                   >
                     Chci neomezenou kalkulačku <ArrowRight className="h-4 w-4" />
